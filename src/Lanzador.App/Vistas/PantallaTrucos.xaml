@@ -1,0 +1,148 @@
+<UserControl x:Class="Lanzador.App.Vistas.PantallaTrucos"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:tema="clr-namespace:Lanzador.App.Tema">
+    <Grid Margin="64,40,64,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock Text="TRUCOS" Style="{StaticResource label}"/>
+            <TextBlock x:Name="TextoNombre" Style="{StaticResource display-l}" Margin="0,18,0,0"/>
+        </StackPanel>
+
+        <!-- Emulador (LB / RB) -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,18,0,0">
+            <ContentPresenter Content="LB" ContentTemplate="{StaticResource PlantillaGlifo}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <ItemsControl x:Name="ListaEmuladores" Focusable="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border x:Name="Pestana" Padding="22,6" Margin="0,0,12,0" Background="{StaticResource surface-100}" tema:Forma.Pastilla="True"
+                                Cursor="Hand" MouseLeftButtonUp="AlPulsarPestana">
+                            <TextBlock x:Name="TextoPestana" Text="{Binding Texto}" FontFamily="{StaticResource font-text}" FontSize="22"
+                                       Foreground="{StaticResource ink-200}"/>
+                        </Border>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Seleccionada}" Value="True">
+                                <Setter TargetName="Pestana" Property="Background" Value="{StaticResource accent-500}"/>
+                                <Setter TargetName="TextoPestana" Property="Foreground" Value="{StaticResource on-accent}"/>
+                                <Setter TargetName="TextoPestana" Property="FontWeight" Value="SemiBold"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <ContentPresenter Content="RB" ContentTemplate="{StaticResource PlantillaGlifo}" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Versión del juego (← →) -->
+        <Border x:Name="FilaVersion" Grid.Row="2" Margin="0,18,0,0" Padding="21,11" CornerRadius="{StaticResource radius-md}"
+                Background="{StaticResource surface-100}" BorderThickness="3" BorderBrush="Transparent">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Versión" Style="{StaticResource body}" VerticalAlignment="Center"/>
+                    <TextBlock Text="‹" FontSize="28" Foreground="{StaticResource ink-200}" Margin="14,0,10,4" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TextoVersion" Style="{StaticResource body-l}" FontWeight="SemiBold" VerticalAlignment="Center" MinWidth="44" TextAlignment="Center"/>
+                    <TextBlock Text="›" FontSize="28" Foreground="{StaticResource ink-200}" Margin="10,0,0,4" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock x:Name="TextoDetalleVersion" Grid.Column="1" Style="{StaticResource body}" VerticalAlignment="Center" Margin="0,0,16,0"/>
+                <TextBlock x:Name="TextoVersionesConTrucos" Grid.Column="2" Style="{StaticResource body}" FontSize="18" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Lista de trucos -->
+        <ScrollViewer x:Name="Desplazador" Grid.Row="3" Margin="-24,0,-24,0" Padding="24,6,24,0" VerticalScrollBarVisibility="Hidden" Focusable="False">
+            <ItemsControl x:Name="ListaTrucos" Focusable="False" Margin="0,0,0,40">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <!-- Encabezado de grupo -->
+                            <TextBlock x:Name="Encabezado" Text="{Binding Titulo}" FontFamily="{StaticResource font-text}" FontSize="20" FontWeight="SemiBold"
+                                       Foreground="{StaticResource ink-200}" Margin="0,16,0,10" Visibility="Collapsed"/>
+                            <!-- ToggleRow -->
+                            <Border x:Name="Fila" CornerRadius="{StaticResource radius-md}" Padding="21,9" Margin="0,0,0,10" Background="{StaticResource surface-100}"
+                                    BorderThickness="3" BorderBrush="Transparent" Cursor="Hand" MouseLeftButtonUp="AlPulsarTruco">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="76"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border x:Name="Interruptor" Width="58" Height="32" CornerRadius="16" Background="{StaticResource surface-300}"
+                                            VerticalAlignment="Center" HorizontalAlignment="Left">
+                                        <Ellipse x:Name="Perilla" Width="24" Height="24" Fill="{StaticResource ink-100}" HorizontalAlignment="Left" Margin="4,0"/>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,16,0">
+                                        <TextBlock Text="{Binding Nombre}" Style="{StaticResource body-l}"/>
+                                        <TextBlock x:Name="Descripcion" Text="{Binding Descripcion}" FontFamily="{StaticResource font-text}" FontSize="18" LineHeight="24"
+                                                   Foreground="{StaticResource ink-200}" TextTrimming="CharacterEllipsis" Visibility="Collapsed"/>
+                                        <TextBlock x:Name="Botones" Text="{Binding Botones}" FontFamily="{StaticResource font-text}" FontWeight="Medium" FontSize="16"
+                                                   LineHeight="22" Foreground="{StaticResource focus}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border x:Name="ChipPendiente" Style="{StaticResource Chip}" Background="{StaticResource warn-soft}" Visibility="Collapsed">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Ellipse Width="10" Height="10" Fill="{StaticResource warn-500}" VerticalAlignment="Center" Margin="0,1,8,0"/>
+                                                <TextBlock Text="Sin aplicar" Style="{StaticResource chip}"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border x:Name="ChipCategoria" Style="{StaticResource Chip}">
+                                            <TextBlock Text="{Binding Categoria}" Style="{StaticResource chip}"/>
+                                        </Border>
+                                        <Border Style="{StaticResource Chip}" Margin="0">
+                                            <TextBlock Text="{Binding Fuentes}" Style="{StaticResource chip}" Foreground="{StaticResource ink-200}"/>
+                                        </Border>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding EsEncabezado}" Value="True">
+                                <Setter TargetName="Encabezado" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="Fila" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding TieneDescripcion}" Value="True">
+                                <Setter TargetName="Descripcion" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Botones}" Value="{x:Null}">
+                                <Setter TargetName="Botones" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Categoria}" Value="{x:Null}">
+                                <Setter TargetName="ChipCategoria" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Pendiente}" Value="True">
+                                <Setter TargetName="ChipPendiente" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding ActivoDeseado}" Value="True">
+                                <Setter TargetName="Interruptor" Property="Background" Value="{StaticResource ok-500}"/>
+                                <Setter TargetName="Perilla" Property="HorizontalAlignment" Value="Right"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Seleccionado}" Value="True">
+                                <Setter TargetName="Fila" Property="Background" Value="{StaticResource surface-200}"/>
+                                <Setter TargetName="Fila" Property="BorderBrush" Value="{StaticResource focus}"/>
+                                <Setter TargetName="Fila" Property="Effect" Value="{StaticResource shadow-focus}"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <TextBlock x:Name="TextoVacio" Grid.Row="3" Style="{StaticResource body-l}" Foreground="{StaticResource ink-200}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                   TextWrapping="Wrap" TextAlignment="Center" MaxWidth="1000" TextTrimming="None"/>
+    </Grid>
+</UserControl>

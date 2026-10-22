@@ -1,0 +1,207 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                    xmlns:tema="clr-namespace:Lanzador.App.Tema">
+    <!--
+      Tokens del Design System "Lanzador Switch", con los mismos nombres. Diseño de referencia 1920 × 1080: MainWindow escala todo según la altura de la ventana.
+    -->
+
+    <!-- ───── Color (tema noche). c-* = Color; sin prefijo = pincel. ───── -->
+    <Color x:Key="c-bg-000">#070A0F</Color>
+    <Color x:Key="c-bg-100">#0C1118</Color>
+    <Color x:Key="c-surface-100">#151C26</Color>
+    <Color x:Key="c-surface-200">#1E2733</Color>
+    <Color x:Key="c-surface-300">#2A3544</Color>
+    <Color x:Key="c-line-100">#1FFFFFFF</Color>
+    <Color x:Key="c-scrim-top">#8C0C1118</Color>
+    <Color x:Key="c-scrim-bottom">#F70C1118</Color>
+    <Color x:Key="c-ink-100">#F2F6FA</Color>
+    <Color x:Key="c-ink-200">#A9B6C4</Color>
+    <Color x:Key="c-ink-300">#7A8898</Color>
+    <Color x:Key="c-focus">#5CD0FF</Color>
+    <Color x:Key="c-accent-500">#3DB2FF</Color>
+    <Color x:Key="c-on-accent">#04121C</Color>
+    <Color x:Key="c-accent-soft">#2E3DB2FF</Color>
+    <Color x:Key="c-star-400">#FFC24D</Color>
+    <Color x:Key="c-ok-500">#3FCB6B</Color>
+    <Color x:Key="c-ok-soft">#383FCB6B</Color>
+    <Color x:Key="c-warn-500">#F2B544</Color>
+    <Color x:Key="c-warn-soft">#38F2B544</Color>
+    <Color x:Key="c-danger-500">#FF6B5E</Color>
+    <Color x:Key="c-danger-soft">#38FF6B5E</Color>
+    <Color x:Key="c-pad-a">#23802D</Color>
+    <Color x:Key="c-pad-b">#C8352E</Color>
+    <Color x:Key="c-pad-x">#2266D6</Color>
+    <Color x:Key="c-pad-y">#E8B400</Color>
+    <Color x:Key="c-on-pad-y">#1A1300</Color>
+    <Color x:Key="c-pad-neutral">#3A4554</Color>
+
+    <SolidColorBrush x:Key="bg-000" Color="{StaticResource c-bg-000}"/>
+    <SolidColorBrush x:Key="bg-100" Color="{StaticResource c-bg-100}"/>
+    <SolidColorBrush x:Key="surface-100" Color="{StaticResource c-surface-100}"/>
+    <SolidColorBrush x:Key="surface-200" Color="{StaticResource c-surface-200}"/>
+    <SolidColorBrush x:Key="surface-300" Color="{StaticResource c-surface-300}"/>
+    <SolidColorBrush x:Key="line-100" Color="{StaticResource c-line-100}"/>
+    <SolidColorBrush x:Key="ink-100" Color="{StaticResource c-ink-100}"/>
+    <SolidColorBrush x:Key="ink-200" Color="{StaticResource c-ink-200}"/>
+    <SolidColorBrush x:Key="ink-300" Color="{StaticResource c-ink-300}"/>
+    <SolidColorBrush x:Key="focus" Color="{StaticResource c-focus}"/>
+    <SolidColorBrush x:Key="accent-500" Color="{StaticResource c-accent-500}"/>
+    <SolidColorBrush x:Key="on-accent" Color="{StaticResource c-on-accent}"/>
+    <SolidColorBrush x:Key="accent-soft" Color="{StaticResource c-accent-soft}"/>
+    <SolidColorBrush x:Key="star-400" Color="{StaticResource c-star-400}"/>
+    <SolidColorBrush x:Key="ok-500" Color="{StaticResource c-ok-500}"/>
+    <SolidColorBrush x:Key="ok-soft" Color="{StaticResource c-ok-soft}"/>
+    <SolidColorBrush x:Key="warn-500" Color="{StaticResource c-warn-500}"/>
+    <SolidColorBrush x:Key="warn-soft" Color="{StaticResource c-warn-soft}"/>
+    <SolidColorBrush x:Key="danger-500" Color="{StaticResource c-danger-500}"/>
+    <SolidColorBrush x:Key="danger-soft" Color="{StaticResource c-danger-soft}"/>
+    <SolidColorBrush x:Key="pad-a" Color="{StaticResource c-pad-a}"/>
+    <SolidColorBrush x:Key="pad-b" Color="{StaticResource c-pad-b}"/>
+    <SolidColorBrush x:Key="pad-x" Color="{StaticResource c-pad-x}"/>
+    <SolidColorBrush x:Key="pad-y" Color="{StaticResource c-pad-y}"/>
+    <SolidColorBrush x:Key="on-pad-y" Color="{StaticResource c-on-pad-y}"/>
+    <SolidColorBrush x:Key="pad-neutral" Color="{StaticResource c-pad-neutral}"/>
+    <!-- Figuras de PlayStation sobre el glifo gris -->
+    <SolidColorBrush x:Key="ps-cruz" Color="#8AB4FF"/>
+    <SolidColorBrush x:Key="ps-circulo" Color="#FF7A7A"/>
+    <SolidColorBrush x:Key="ps-cuadrado" Color="#F2A7DA"/>
+    <SolidColorBrush x:Key="ps-triangulo" Color="#5FD6AE"/>
+
+    <!-- Variantes translúcidas de las maquetas (sobre el arte del juego) -->
+    <SolidColorBrush x:Key="scrim-dialog" Color="#C70C1118"/>
+    <SolidColorBrush x:Key="bar-bg" Color="#D9070A0F"/>
+    <SolidColorBrush x:Key="surface-glass" Color="#D9151C26"/>
+    <SolidColorBrush x:Key="surface-glass-strong" Color="#E6151C26"/>
+
+    <!-- Degradados sobre el arte del juego -->
+    <LinearGradientBrush x:Key="scrim-vertical" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource c-scrim-top}" Offset="0"/>
+        <GradientStop Color="#000C1118" Offset="0.22"/>
+        <GradientStop Color="#400C1118" Offset="0.44"/>
+        <GradientStop Color="{StaticResource c-scrim-bottom}" Offset="0.62"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="scrim-lateral" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#EB0C1118" Offset="0"/>
+        <GradientStop Color="#000C1118" Offset="0.62"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="brillo-caratula" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#00FFFFFF" Offset="0.35"/>
+        <GradientStop Color="#38FFFFFF" Offset="0.5"/>
+        <GradientStop Color="#00FFFFFF" Offset="0.65"/>
+    </LinearGradientBrush>
+
+    <!-- ───── Tipografía ───── -->
+    <FontFamily x:Key="font-display">pack://application:,,,/Fuentes/#Sora, Segoe UI Variable Display, Segoe UI</FontFamily>
+    <FontFamily x:Key="font-text">pack://application:,,,/Fuentes/#Lexend, Segoe UI Variable Text, Segoe UI</FontFamily>
+    <FontFamily x:Key="font-mono">pack://application:,,,/Fuentes/#JetBrains Mono, Consolas</FontFamily>
+
+    <Style x:Key="display-xl" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource font-display}"/>
+        <Setter Property="FontSize" Value="64"/>
+        <Setter Property="LineHeight" Value="68"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="MaxHeight" Value="137"/>
+    </Style>
+    <Style x:Key="display-l" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource font-display}"/>
+        <Setter Property="FontSize" Value="44"/>
+        <Setter Property="LineHeight" Value="50"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+    <Style x:Key="title" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource font-display}"/>
+        <Setter Property="FontSize" Value="28"/>
+        <Setter Property="LineHeight" Value="34"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+    <Style x:Key="body-l" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="LineHeight" Value="32"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+    <Style x:Key="body" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+        <Setter Property="FontSize" Value="20"/>
+        <Setter Property="LineHeight" Value="28"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="Foreground" Value="{StaticResource ink-200}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+    <!-- label: el texto va en MAYÚSCULAS desde el código (WPF no tiene text-transform ni letter-spacing). -->
+    <Style x:Key="label" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="LineHeight" Value="20"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource ink-200}"/>
+    </Style>
+    <Style x:Key="chip" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+        <Setter Property="FontSize" Value="17"/>
+        <Setter Property="LineHeight" Value="22"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+    </Style>
+    <Style x:Key="caption" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="LineHeight" Value="22"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="Foreground" Value="{StaticResource ink-200}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+    <Style x:Key="mono" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource font-mono}"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="LineHeight" Value="22"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="{StaticResource ink-200}"/>
+    </Style>
+
+    <!-- ───── Espacio, radios, tamaños ───── -->
+    <sys:Double x:Key="space-16">64</sys:Double>
+    <Thickness x:Key="margen-pantalla">64,0,64,0</Thickness>
+    <CornerRadius x:Key="radius-sm">8</CornerRadius>
+    <CornerRadius x:Key="radius-md">12</CornerRadius>
+    <CornerRadius x:Key="radius-lg">16</CornerRadius>
+    <CornerRadius x:Key="radius-xl">24</CornerRadius>
+    <!-- radius-pill (999): en WPF usa tema:Forma.Pastilla="True", que redondea con la mitad del alto. -->
+    <sys:Double x:Key="tile-grid">200</sys:Double>
+    <sys:Double x:Key="tile-shelf">264</sys:Double>
+    <sys:Double x:Key="tile-hero">360</sys:Double>
+    <sys:Double x:Key="bar-height">76</sys:Double>
+    <sys:Double x:Key="glyph">34</sys:Double>
+
+    <!-- ───── Sombras (WPF: un anillo de 3 px en focus + este resplandor) ───── -->
+    <DropShadowEffect x:Key="shadow-focus" Color="{StaticResource c-focus}" BlurRadius="36" ShadowDepth="0" Opacity="0.55"/>
+    <DropShadowEffect x:Key="shadow-raise" Color="Black" BlurRadius="28" ShadowDepth="12" Direction="270" Opacity="0.45"/>
+    <DropShadowEffect x:Key="shadow-dialog" Color="Black" BlurRadius="64" ShadowDepth="24" Direction="270" Opacity="0.6"/>
+
+    <!-- ───── Movimiento ───── -->
+    <!-- Con «Reducir movimiento» el lanzador cambia esto a Collapsed (destello de las carátulas) -->
+    <Visibility x:Key="visibilidad-destello">Visible</Visibility>
+    <Duration x:Key="dur-fast">0:0:0.12</Duration>
+    <Duration x:Key="dur-focus">0:0:0.16</Duration>
+    <Duration x:Key="dur-slide">0:0:0.22</Duration>
+    <Duration x:Key="dur-fade">0:0:0.32</Duration>
+    <Duration x:Key="dur-page">0:0:0.2</Duration>
+    <tema:CurvaBezier x:Key="ease-out" X1="0.2" Y1="0.8" X2="0.2" Y2="1"/>
+    <tema:CurvaBezier x:Key="ease-in-out" X1="0.4" Y1="0" X2="0.2" Y2="1"/>
+</ResourceDictionary>

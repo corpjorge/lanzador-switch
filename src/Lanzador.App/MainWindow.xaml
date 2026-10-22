@@ -1,0 +1,179 @@
+﻿<Window x:Class="Lanzador.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:tema="clr-namespace:Lanzador.App.Tema"
+        Title="Lanzador Switch" Icon="pack://application:,,,/Icono/Lanzador.ico" Width="1600" Height="900" MinWidth="1000" MinHeight="640"
+        Background="{StaticResource bg-000}" FontFamily="{StaticResource font-text}"
+        WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="ClearType">
+    <!-- Raíz a tamaño de ventana; dentro, un lienzo de 1080 de alto escalado a la ventana (diseño de 10 pies, 1920 × 1080). -->
+    <Grid x:Name="Raiz" ClipToBounds="True">
+        <Grid x:Name="Lienzo" Width="1920" Height="1080" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid.LayoutTransform>
+                <ScaleTransform x:Name="Escala" ScaleX="1" ScaleY="1"/>
+            </Grid.LayoutTransform>
+
+            <Rectangle Fill="{StaticResource bg-100}" IsHitTestVisible="False"/>
+            <!-- Fondo: arte del juego seleccionado, difuminado -->
+            <Image x:Name="ImagenFondo" Stretch="UniformToFill" Opacity="0" IsHitTestVisible="False" Margin="-48">
+                <Image.Effect>
+                    <BlurEffect Radius="28" KernelType="Gaussian" RenderingBias="Performance"/>
+                </Image.Effect>
+            </Image>
+            <Rectangle Fill="{StaticResource scrim-vertical}" IsHitTestVisible="False"/>
+            <Rectangle Fill="{StaticResource scrim-lateral}" IsHitTestVisible="False"/>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="76"/> <!-- bar-height -->
+                </Grid.RowDefinitions>
+
+                <ContentControl x:Name="Contenido" Focusable="False" RenderTransformOrigin="0.5,0.5">
+                    <ContentControl.RenderTransform>
+                        <TranslateTransform x:Name="DesplazamientoContenido"/>
+                    </ContentControl.RenderTransform>
+                </ContentControl>
+
+                <!-- Cabecera de las secciones (solo en Inicio, Biblioteca, Emuladores y Controles) -->
+                <Grid x:Name="Cabecera" Height="104" VerticalAlignment="Top" Margin="{StaticResource margen-pantalla}" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Lanzador" FontFamily="{StaticResource font-display}" FontWeight="Bold" FontSize="24"
+                               Foreground="{StaticResource ink-100}" VerticalAlignment="Center"/>
+                    <Grid x:Name="Pestanas" Grid.Column="1" Margin="48,0,0,0" VerticalAlignment="Center">
+                        <Border x:Name="IndicadorPestana" HorizontalAlignment="Left" Background="{StaticResource accent-500}"
+                                tema:Forma.Pastilla="True" Width="0">
+                            <Border.RenderTransform>
+                                <TranslateTransform x:Name="PosicionIndicador"/>
+                            </Border.RenderTransform>
+                        </Border>
+                        <StackPanel x:Name="ListaPestanas" Orientation="Horizontal"/>
+                    </Grid>
+                    <TextBlock x:Name="TextoReloj" Grid.Column="4" FontFamily="{StaticResource font-text}" FontSize="24" Foreground="{StaticResource ink-100}"
+                               Typography.NumeralAlignment="Tabular" VerticalAlignment="Center" Margin="32,0,0,0"/>
+                </Grid>
+
+                <!-- ButtonHints: qué hace cada botón en la pantalla actual -->
+                <Border Grid.Row="1" Background="{StaticResource bar-bg}" BorderBrush="{StaticResource line-100}" BorderThickness="0,1,0,0">
+                    <Grid Margin="{StaticResource margen-pantalla}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="TextoEstado" Style="{StaticResource body}" FontSize="18" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,24,0"/>
+                        <ItemsControl x:Name="ListaAyudas" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="28,0,0,0" ToolTip="{Binding Tecla}">
+                                        <ItemsControl ItemsSource="{Binding Glifos}" ItemTemplate="{StaticResource PlantillaGlifo}" Focusable="False" VerticalAlignment="Center">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <StackPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemContainerStyle>
+                                                <Style TargetType="ContentPresenter">
+                                                    <Setter Property="Margin" Value="0,0,6,0"/>
+                                                </Style>
+                                            </ItemsControl.ItemContainerStyle>
+                                        </ItemsControl>
+                                        <TextBlock Text="{Binding Texto}" FontFamily="{StaticResource font-text}" FontWeight="Medium" FontSize="20"
+                                                   Foreground="{StaticResource ink-100}" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Tecla}" FontFamily="{StaticResource font-text}" FontSize="15"
+                                                   Foreground="{StaticResource ink-300}" Margin="10,2,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Menús emergentes (la barra de botones queda visible debajo) -->
+            <Grid x:Name="Superpuestos" Margin="0,0,0,76"/>
+
+            <!-- Intro al abrir: «Switch» con resplandor, destello y línea de acento; se salta con cualquier botón -->
+            <Grid x:Name="Intro" Panel.ZIndex="30" Visibility="Collapsed" Background="{StaticResource bg-000}" MouseDown="AlPulsarIntro">
+                <Ellipse x:Name="HaloIntro" Width="1100" Height="520" Opacity="0" IsHitTestVisible="False">
+                    <Ellipse.Fill>
+                        <RadialGradientBrush>
+                            <GradientStop Color="#383DB2FF" Offset="0"/>
+                            <GradientStop Color="#123DB2FF" Offset="0.55"/>
+                            <GradientStop Color="#003DB2FF" Offset="1"/>
+                        </RadialGradientBrush>
+                    </Ellipse.Fill>
+                </Ellipse>
+                <StackPanel x:Name="LogoIntro" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0" RenderTransformOrigin="0.5,0.5"
+                            IsHitTestVisible="False">
+                    <StackPanel.RenderTransform>
+                        <ScaleTransform x:Name="EscalaIntro" ScaleX="0.92" ScaleY="0.92"/>
+                    </StackPanel.RenderTransform>
+                    <Grid>
+                        <!-- Resplandor: la misma palabra en color de foco, difuminada detrás -->
+                        <TextBlock x:Name="ResplandorIntro" Text="Switch" FontFamily="{StaticResource font-display}" FontWeight="Bold" FontSize="148"
+                                   Foreground="{StaticResource focus}" Opacity="0" HorizontalAlignment="Center">
+                            <TextBlock.Effect>
+                                <BlurEffect Radius="48" KernelType="Gaussian"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                        <TextBlock Text="Switch" FontFamily="{StaticResource font-display}" FontWeight="Bold" FontSize="148" HorizontalAlignment="Center">
+                            <TextBlock.Foreground>
+                                <!-- Una franja de luz que cruza las letras -->
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,0.25">
+                                    <LinearGradientBrush.RelativeTransform>
+                                        <TranslateTransform x:Name="DestelloIntro" X="-1.2"/>
+                                    </LinearGradientBrush.RelativeTransform>
+                                    <GradientStop Color="#F2F6FA" Offset="0"/>
+                                    <GradientStop Color="#F2F6FA" Offset="0.38"/>
+                                    <GradientStop Color="#5CD0FF" Offset="0.5"/>
+                                    <GradientStop Color="#F2F6FA" Offset="0.62"/>
+                                    <GradientStop Color="#F2F6FA" Offset="1"/>
+                                </LinearGradientBrush>
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                    </Grid>
+                    <Border x:Name="LineaIntro" Height="5" Width="0" CornerRadius="3" Background="{StaticResource accent-500}" HorizontalAlignment="Center"
+                            Margin="0,6,0,0"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Fundido a negro al abrir un juego -->
+            <Grid x:Name="Negro" Background="Black" Opacity="0" IsHitTestVisible="False" Panel.ZIndex="20">
+                <!-- Al abrir un juego: cómo volver al lanzador -->
+                <StackPanel x:Name="AyudaVolver" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0">
+                    <TextBlock x:Name="TextoAbriendo" Style="{StaticResource display-l}" HorizontalAlignment="Center" TextAlignment="Center"
+                               MaxWidth="1500"/>
+                    <TextBlock x:Name="TextoAbriendoCon" Style="{StaticResource body-l}" Foreground="{StaticResource ink-200}" HorizontalAlignment="Center"
+                               Margin="0,8,0,0"/>
+                    <TextBlock Text="PARA VOLVER AL LANZADOR, MANTÉN 1,5 SEGUNDOS" Style="{StaticResource label}" HorizontalAlignment="Center" Margin="0,56,0,18"/>
+                    <StackPanel x:Name="ListaCombos" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="TextoTeclaTrucos" Style="{StaticResource body}" HorizontalAlignment="Center" Margin="0,30,0,0"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Toast: aviso breve arriba al centro -->
+            <Grid x:Name="CajaAviso" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,32,0,0" MaxWidth="720"
+                  Opacity="0" IsHitTestVisible="False" RenderTransformOrigin="0.5,0">
+                <Grid.RenderTransform>
+                    <TranslateTransform x:Name="DesplazamientoAviso"/>
+                </Grid.RenderTransform>
+                <Border Background="{StaticResource surface-200}" CornerRadius="{StaticResource radius-md}" Effect="{StaticResource shadow-dialog}"/>
+                <Border x:Name="BordeAviso" BorderBrush="{StaticResource focus}" BorderThickness="2" CornerRadius="{StaticResource radius-md}" Padding="28,16">
+                    <TextBlock x:Name="TextoAviso" FontFamily="{StaticResource font-text}" FontSize="22" LineHeight="30"
+                               Foreground="{StaticResource ink-100}" TextWrapping="Wrap"/>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

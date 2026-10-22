@@ -1,0 +1,362 @@
+﻿<Application x:Class="Lanzador.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:tema="clr-namespace:Lanzador.App.Tema"
+             ShutdownMode="OnMainWindowClose">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Tema/Tokens.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Nombres que ya usan las pantallas, apuntando a los tokens del Design System -->
+            <FontFamily x:Key="Fuente">pack://application:,,,/Fuentes/#Lexend, Segoe UI Variable Text, Segoe UI</FontFamily>
+
+            <SolidColorBrush x:Key="Fondo" Color="{StaticResource c-bg-100}"/>
+            <SolidColorBrush x:Key="Panel" Color="{StaticResource c-surface-100}"/>
+            <SolidColorBrush x:Key="PanelClaro" Color="{StaticResource c-surface-200}"/>
+            <SolidColorBrush x:Key="Borde" Color="{StaticResource c-line-100}"/>
+            <SolidColorBrush x:Key="Acento" Color="{StaticResource c-accent-500}"/>
+            <SolidColorBrush x:Key="Foco" Color="{StaticResource c-focus}"/>
+            <SolidColorBrush x:Key="Texto" Color="{StaticResource c-ink-100}"/>
+            <SolidColorBrush x:Key="TextoSecundario" Color="{StaticResource c-ink-200}"/>
+            <SolidColorBrush x:Key="Verde" Color="{StaticResource c-ok-500}"/>
+            <SolidColorBrush x:Key="Ambar" Color="{StaticResource c-warn-500}"/>
+            <SolidColorBrush x:Key="Rojo" Color="{StaticResource c-danger-500}"/>
+            <SolidColorBrush x:Key="BotonA" Color="{StaticResource c-pad-a}"/>
+            <SolidColorBrush x:Key="BotonB" Color="{StaticResource c-pad-b}"/>
+            <SolidColorBrush x:Key="BotonX" Color="{StaticResource c-pad-x}"/>
+            <SolidColorBrush x:Key="BotonY" Color="{StaticResource c-pad-y}"/>
+
+            <!-- Como display-l, pero sin alto de línea fijo: varias pantallas le cambian el tamaño. -->
+            <!--
+              Glifo de un botón del mando. El contenido es el botón lógico (A, B, X, Y, LB, RB, ☰, Vista) y se dibuja con
+              el último mando usado: Xbox (colores), PlayStation (✕ ○ □ △, L1 R1, Create) o Switch (A B X Y, L R, + −).
+            -->
+            <tema:ConvertidorGlifo x:Key="EtiquetaGlifo" Parte="Etiqueta"/>
+            <tema:ConvertidorGlifo x:Key="FondoGlifo" Parte="Fondo"/>
+            <tema:ConvertidorGlifo x:Key="TintaGlifo" Parte="Tinta"/>
+            <tema:ConvertidorGlifo x:Key="TamanoGlifo" Parte="Tamano"/>
+            <DataTemplate x:Key="PlantillaGlifo">
+                <Border x:Name="Glifo" MinWidth="{StaticResource glyph}" Height="{StaticResource glyph}" Padding="8,0"
+                        tema:Forma.Pastilla="True" VerticalAlignment="Center">
+                    <Border.Background>
+                        <MultiBinding Converter="{StaticResource FondoGlifo}">
+                            <Binding/>
+                            <Binding Path="Familia" Source="{x:Static tema:EstiloMando.Actual}"/>
+                        </MultiBinding>
+                    </Border.Background>
+                    <TextBlock x:Name="Letra" FontFamily="{StaticResource font-text}" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock.FontSize>
+                            <MultiBinding Converter="{StaticResource TamanoGlifo}">
+                                <Binding/>
+                                <Binding Path="Familia" Source="{x:Static tema:EstiloMando.Actual}"/>
+                            </MultiBinding>
+                        </TextBlock.FontSize>
+                        <TextBlock.Text>
+                            <MultiBinding Converter="{StaticResource EtiquetaGlifo}">
+                                <Binding/>
+                                <Binding Path="Familia" Source="{x:Static tema:EstiloMando.Actual}"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                        <TextBlock.Foreground>
+                            <MultiBinding Converter="{StaticResource TintaGlifo}">
+                                <Binding/>
+                                <Binding Path="Familia" Source="{x:Static tema:EstiloMando.Actual}"/>
+                            </MultiBinding>
+                        </TextBlock.Foreground>
+                    </TextBlock>
+                </Border>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding}" Value="LB">
+                        <Setter TargetName="Glifo" Property="MinWidth" Value="48"/>
+                        <Setter TargetName="Glifo" Property="tema:Forma.Pastilla" Value="False"/>
+                        <Setter TargetName="Glifo" Property="CornerRadius" Value="{StaticResource radius-sm}"/>
+                        <Setter TargetName="Letra" Property="FontSize" Value="15"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="RB">
+                        <Setter TargetName="Glifo" Property="MinWidth" Value="48"/>
+                        <Setter TargetName="Glifo" Property="tema:Forma.Pastilla" Value="False"/>
+                        <Setter TargetName="Glifo" Property="CornerRadius" Value="{StaticResource radius-sm}"/>
+                        <Setter TargetName="Letra" Property="FontSize" Value="15"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <!-- Glifo fijo (no cambia con el mando): para mostrar a la vez los botones de varios mandos -->
+            <DataTemplate x:Key="PlantillaGlifoFijo">
+                <Border x:Name="Glifo" MinWidth="{StaticResource glyph}" Height="{StaticResource glyph}" Padding="8,0"
+                        tema:Forma.Pastilla="True" Background="{StaticResource pad-neutral}" VerticalAlignment="Center">
+                    <TextBlock x:Name="Letra" Text="{Binding}" FontFamily="{StaticResource font-text}" Foreground="{StaticResource ink-100}"
+                               FontWeight="Bold" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <DataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding}" Value="A">
+                        <Setter TargetName="Glifo" Property="Background" Value="{StaticResource pad-a}"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="B">
+                        <Setter TargetName="Glifo" Property="Background" Value="{StaticResource pad-b}"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="X">
+                        <Setter TargetName="Glifo" Property="Background" Value="{StaticResource pad-x}"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="Y">
+                        <Setter TargetName="Glifo" Property="Background" Value="{StaticResource pad-y}"/>
+                        <Setter TargetName="Letra" Property="Foreground" Value="{StaticResource on-pad-y}"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="LB">
+                        <Setter TargetName="Glifo" Property="MinWidth" Value="48"/>
+                        <Setter TargetName="Glifo" Property="tema:Forma.Pastilla" Value="False"/>
+                        <Setter TargetName="Glifo" Property="CornerRadius" Value="{StaticResource radius-sm}"/>
+                        <Setter TargetName="Letra" Property="FontSize" Value="15"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="RB">
+                        <Setter TargetName="Glifo" Property="MinWidth" Value="48"/>
+                        <Setter TargetName="Glifo" Property="tema:Forma.Pastilla" Value="False"/>
+                        <Setter TargetName="Glifo" Property="CornerRadius" Value="{StaticResource radius-sm}"/>
+                        <Setter TargetName="Letra" Property="FontSize" Value="15"/>
+                    </DataTrigger>
+                </DataTemplate.Triggers>
+            </DataTemplate>
+
+            <Style x:Key="Titulo" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource font-display}"/>
+                <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+                <Setter Property="FontSize" Value="44"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            </Style>
+            <Style x:Key="Subtitulo" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+                <Setter Property="Foreground" Value="{StaticResource ink-200}"/>
+                <Setter Property="FontSize" Value="20"/>
+                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            </Style>
+            <Style x:Key="Normal" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+                <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+                <Setter Property="FontSize" Value="24"/>
+                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            </Style>
+
+            <!-- Chip: etiqueta redondeada (compatibilidad, calificación, fuente de un truco). Neutro sobre surface-300. -->
+            <Style x:Key="Chip" TargetType="Border">
+                <Setter Property="tema:Forma.Pastilla" Value="True"/>
+                <Setter Property="Padding" Value="14,4"/>
+                <Setter Property="Margin" Value="0,0,8,0"/>
+                <Setter Property="Background" Value="{StaticResource surface-300}"/>
+            </Style>
+            <Style x:Key="TextoChip" TargetType="TextBlock" BasedOn="{StaticResource chip}"/>
+
+            <!-- Controles de la pantalla de configuración -->
+            <Style TargetType="TextBox" x:Key="Campo">
+                <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+                <Setter Property="FontSize" Value="20"/>
+                <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+                <Setter Property="Background" Value="{StaticResource bg-000}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource line-100}"/>
+                <Setter Property="CaretBrush" Value="{StaticResource ink-100}"/>
+                <Setter Property="SelectionBrush" Value="{StaticResource accent-500}"/>
+                <Setter Property="Padding" Value="12,8"/>
+                <Setter Property="Margin" Value="0,4,0,10"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TextBox">
+                            <Border x:Name="Caja" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1" CornerRadius="{StaticResource radius-sm}" Padding="{TemplateBinding Padding}">
+                                <ScrollViewer x:Name="PART_ContentHost" Focusable="False" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Hidden"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Caja" Property="BorderBrush" Value="{StaticResource focus}"/>
+                                    <Setter TargetName="Caja" Property="BorderThickness" Value="2"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <Style TargetType="Button" x:Key="BotonPlano">
+                <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+                <Setter Property="FontSize" Value="20"/>
+                <Setter Property="FontWeight" Value="Medium"/>
+                <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+                <Setter Property="Background" Value="{StaticResource surface-200}"/>
+                <Setter Property="Padding" Value="20,10"/>
+                <Setter Property="Margin" Value="0,4,10,10"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Caja" Background="{TemplateBinding Background}" CornerRadius="{StaticResource radius-md}"
+                                    Padding="{TemplateBinding Padding}" BorderThickness="3" BorderBrush="Transparent">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Caja" Property="BorderBrush" Value="{StaticResource focus}"/>
+                                    <Setter TargetName="Caja" Property="Background" Value="{StaticResource surface-300}"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Caja" Property="Background" Value="{StaticResource surface-300}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+            <!-- Casilla como interruptor (ToggleRow): verde encendido, anillo de foco con el teclado o el mando -->
+            <Style TargetType="CheckBox" x:Key="Casilla">
+                <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+                <Setter Property="FontSize" Value="20"/>
+                <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+                <Setter Property="Margin" Value="-13,2,0,8"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="CheckBox">
+                            <Border x:Name="Caja" Background="Transparent" BorderBrush="Transparent" BorderThickness="3"
+                                    CornerRadius="{StaticResource radius-md}" Padding="10,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border x:Name="Interruptor" Width="58" Height="32" CornerRadius="16" Background="{StaticResource surface-300}" VerticalAlignment="Center">
+                                        <Ellipse x:Name="Perilla" Width="24" Height="24" Fill="{StaticResource ink-100}" HorizontalAlignment="Left" Margin="4,0"/>
+                                    </Border>
+                                    <ContentPresenter Margin="16,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Interruptor" Property="Background" Value="{StaticResource ok-500}"/>
+                                    <Setter TargetName="Perilla" Property="HorizontalAlignment" Value="Right"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Caja" Property="BorderBrush" Value="{StaticResource focus}"/>
+                                    <Setter TargetName="Caja" Property="Background" Value="{StaticResource surface-200}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Selector: un ComboBox que se cambia con ← → (y con el ratón abre su lista) -->
+            <Style TargetType="ComboBox" x:Key="Selector">
+                <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+                <Setter Property="FontSize" Value="20"/>
+                <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+                <Setter Property="Background" Value="{StaticResource surface-200}"/>
+                <Setter Property="Margin" Value="0,4,0,10"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBox">
+                            <Grid>
+                                <ToggleButton Focusable="False" ClickMode="Press"
+                                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                    <ToggleButton.Template>
+                                        <ControlTemplate TargetType="ToggleButton">
+                                            <Border Background="Transparent"/>
+                                        </ControlTemplate>
+                                    </ToggleButton.Template>
+                                </ToggleButton>
+                                <Border x:Name="Caja" Background="{TemplateBinding Background}" CornerRadius="{StaticResource radius-md}" BorderThickness="3"
+                                        BorderBrush="Transparent" Padding="14,7" IsHitTestVisible="False">
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Right" Text="‹  ›" Foreground="{StaticResource ink-200}" Margin="12,0,0,2" VerticalAlignment="Center"/>
+                                        <ContentPresenter Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                          VerticalAlignment="Center"/>
+                                    </DockPanel>
+                                </Border>
+                                <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                                    <Border Background="{StaticResource surface-200}" CornerRadius="{StaticResource radius-md}" Padding="6" Margin="0,4,0,0"
+                                            BorderBrush="{StaticResource line-100}" BorderThickness="1"
+                                            MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                                        <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                    <Setter TargetName="Caja" Property="BorderBrush" Value="{StaticResource focus}"/>
+                                    <Setter TargetName="Caja" Property="Background" Value="{StaticResource surface-300}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Resources>
+                    <Style TargetType="ComboBoxItem">
+                        <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ComboBoxItem">
+                                    <Border x:Name="Fondo" Background="Transparent" CornerRadius="{StaticResource radius-sm}" Padding="12,8">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter TargetName="Fondo" Property="Background" Value="{StaticResource surface-300}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter Property="FontWeight" Value="SemiBold"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Style.Resources>
+            </Style>
+
+            <!-- Lista simple (carpetas de juegos) -->
+            <Style TargetType="ListBox" x:Key="Lista">
+                <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+                <Setter Property="FontSize" Value="20"/>
+                <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+                <Setter Property="Background" Value="{StaticResource bg-000}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource line-100}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="6"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBox">
+                            <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="{StaticResource radius-md}" Padding="{TemplateBinding Padding}">
+                                <ItemsPresenter/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Resources>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Fondo" Background="Transparent" BorderBrush="Transparent" BorderThickness="2"
+                                            CornerRadius="{StaticResource radius-sm}" Padding="12,6">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Fondo" Property="Background" Value="{StaticResource surface-300}"/>
+                                        </Trigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter TargetName="Fondo" Property="BorderBrush" Value="{StaticResource focus}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Style.Resources>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

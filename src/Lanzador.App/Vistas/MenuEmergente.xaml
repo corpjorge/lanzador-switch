@@ -1,0 +1,100 @@
+<UserControl x:Class="Lanzador.App.Vistas.MenuEmergente"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- MenuDialog del Design System: 680 de ancho, radius-xl, surface-200, sobre la pantalla atenuada -->
+    <Grid>
+        <Rectangle x:Name="Atenuado" Fill="{StaticResource scrim-dialog}" MouseDown="AlPulsarFondo"/>
+        <Grid x:Name="Caja" Width="680" MaxHeight="880" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,40"
+              RenderTransformOrigin="0.5,0.5">
+            <Grid.RenderTransform>
+                <ScaleTransform x:Name="EscalaCaja" ScaleX="1" ScaleY="1"/>
+            </Grid.RenderTransform>
+            <Border Background="{StaticResource surface-200}" CornerRadius="{StaticResource radius-xl}" Effect="{StaticResource shadow-dialog}"/>
+            <Grid Margin="32">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock x:Name="TextoTitulo" Style="{StaticResource title}" TextWrapping="Wrap" TextTrimming="None"/>
+                <TextBlock x:Name="TextoSubtitulo" Grid.Row="1" FontFamily="{StaticResource font-text}" FontSize="18" LineHeight="26"
+                           Foreground="{StaticResource ink-200}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                <ScrollViewer x:Name="Desplazador" Grid.Row="2" Margin="-24,-12,-24,-32" Padding="24,24,24,20"
+                              VerticalScrollBarVisibility="Hidden" Focusable="False">
+                    <ItemsControl x:Name="ListaOpciones" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid x:Name="Opcion" Margin="0,0,0,12" Cursor="Hand" MouseLeftButtonUp="AlPulsarOpcion">
+                                    <!-- Resplandor del foco detrás (así el texto no se difumina) -->
+                                    <Border x:Name="Brillo" CornerRadius="{StaticResource radius-md}" Background="{StaticResource surface-300}"
+                                            Effect="{StaticResource shadow-focus}" Opacity="0"/>
+                                    <Border x:Name="Fila" CornerRadius="{StaticResource radius-md}" Padding="21,11" Background="{StaticResource surface-100}"
+                                            BorderThickness="3" BorderBrush="Transparent">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Image x:Name="Icono" Source="{Binding Icono}" Width="48" Height="48" Margin="0,0,18,0" VerticalAlignment="Center"
+                                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Texto}" FontFamily="{StaticResource font-text}" FontSize="24" LineHeight="32"
+                                                           Foreground="{StaticResource ink-100}" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Text="{Binding Detalle}" FontFamily="{StaticResource font-text}" FontSize="16" LineHeight="22"
+                                                           Foreground="{StaticResource ink-200}" TextWrapping="Wrap" Margin="0,2,0,0">
+                                                    <TextBlock.Style>
+                                                        <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding Detalle}" Value="{x:Null}">
+                                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </TextBlock.Style>
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock x:Name="Marca" Grid.Column="2" Text="✓" Foreground="{StaticResource ok-500}" FontSize="24" FontWeight="Bold"
+                                                       VerticalAlignment="Center" Margin="16,0,0,0" Visibility="Collapsed"/>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding Icono}" Value="{x:Null}">
+                                        <Setter TargetName="Icono" Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Marcada}" Value="True">
+                                        <Setter TargetName="Marca" Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Deshabilitada}" Value="True">
+                                        <Setter TargetName="Opcion" Property="Opacity" Value="0.45"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding Seleccionada}" Value="True">
+                                        <Setter TargetName="Fila" Property="Background" Value="Transparent"/>
+                                        <Setter TargetName="Fila" Property="BorderBrush" Value="{StaticResource focus}"/>
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetName="Brillo" Storyboard.TargetProperty="Opacity" To="1"
+                                                                     Duration="{StaticResource dur-focus}" EasingFunction="{StaticResource ease-out}"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <BeginStoryboard>
+                                                <Storyboard>
+                                                    <DoubleAnimation Storyboard.TargetName="Brillo" Storyboard.TargetProperty="Opacity" To="0"
+                                                                     Duration="{StaticResource dur-fast}"/>
+                                                </Storyboard>
+                                            </BeginStoryboard>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

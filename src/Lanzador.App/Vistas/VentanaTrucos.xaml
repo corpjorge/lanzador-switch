@@ -1,0 +1,48 @@
+<Window x:Class="Lanzador.App.Vistas.VentanaTrucos"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Trucos activos" WindowStyle="None" AllowsTransparency="True" Background="Transparent" ResizeMode="NoResize"
+        Topmost="True" ShowInTaskbar="False" ShowActivated="False" Focusable="False" SizeToContent="Height" Width="600"
+        FontFamily="{StaticResource font-text}" TextOptions.TextFormattingMode="Ideal">
+    <!-- Panel flotante sobre el juego: no toma el foco y los clics lo atraviesan (estilos extendidos en el código) -->
+    <Viewbox x:Name="Ajuste" Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Top">
+        <Border x:Name="Panel" Width="552" Margin="24" Padding="26,22" Background="{StaticResource surface-glass-strong}"
+                CornerRadius="{StaticResource radius-lg}" BorderBrush="{StaticResource line-100}" BorderThickness="1"
+                Effect="{StaticResource shadow-dialog}" Opacity="0">
+            <StackPanel>
+                <DockPanel>
+                    <Border DockPanel.Dock="Right" Padding="10,2" CornerRadius="{StaticResource radius-sm}" Background="{StaticResource pad-neutral}"
+                            VerticalAlignment="Center">
+                        <TextBlock x:Name="TextoTecla" Text="F7" FontWeight="Bold" FontSize="14" Foreground="{StaticResource ink-100}"/>
+                    </Border>
+                    <TextBlock Text="TRUCOS ACTIVOS" Style="{StaticResource label}" VerticalAlignment="Center"/>
+                </DockPanel>
+                <TextBlock x:Name="TextoJuego" Style="{StaticResource title}" FontSize="24" LineHeight="30" TextWrapping="Wrap" TextTrimming="None"
+                           Margin="0,10,0,0"/>
+                <TextBlock x:Name="TextoDetalle" Style="{StaticResource caption}" Margin="0,2,0,0"/>
+
+                <ItemsControl x:Name="Lista" Margin="0,16,0,0" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="14,10" Margin="0,0,0,8" CornerRadius="{StaticResource radius-md}" Background="{StaticResource surface-200}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Nombre}" FontSize="19" LineHeight="25" Foreground="{StaticResource ink-100}" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="Botones" Text="{Binding Botones}" FontSize="16" LineHeight="22" FontWeight="Medium"
+                                               Foreground="{StaticResource focus}" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding Botones}" Value="{x:Null}">
+                                    <Setter TargetName="Botones" Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <TextBlock x:Name="TextoMensaje" Style="{StaticResource body}" TextWrapping="Wrap" TextTrimming="None" Margin="0,12,0,0" Visibility="Collapsed"/>
+                <TextBlock x:Name="TextoPie" Style="{StaticResource caption}" Foreground="{StaticResource ink-300}" Margin="0,10,0,0"/>
+            </StackPanel>
+        </Border>
+    </Viewbox>
+</Window>

@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Lanzador.App/Lanzador.App.csproj" />
+    <Project Path="src/Lanzador.Core/Lanzador.Core.csproj" />
+    <Project Path="src/Lanzador.Pruebas/Lanzador.Pruebas.csproj" />
+  </Folder>
+</Solution>

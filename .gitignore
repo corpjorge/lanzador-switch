@@ -1,0 +1,22 @@
+# Compilación (se regenera con dotnet build / dotnet publish)
+bin/
+obj/
+*.user
+*.suo
+*.binlog
+.vs/
+.vscode/
+.idea/
+TestResults/
+
+# Lanzador publicado y sus datos: configuración personal (rutas, calificaciones),
+# caché de carátulas y fondos descargados (arte con derechos de autor),
+# respaldos de la configuración de los emuladores y registros.
+/app/
+
+# Sueltos
+errores.log
+*.tmp
+
+# Paquetes de las versiones (herramientas\empaquetar.ps1)
+/publicar/
