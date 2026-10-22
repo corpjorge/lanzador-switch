@@ -47,7 +47,9 @@ Es portable: no necesita instalar .NET ni nada más, y guarda su configuración 
 | B | Esc | Volver |
 | — | F7 | Durante el juego: mostrar u ocultar los trucos activos |
 
-La primera vez revisa **☰ → Configuración**: las rutas de los emuladores y las carpetas de juegos se detectan solas, pero puedes cambiarlas. La guía completa, con cómo funciona cada parte, está en [LEEME.md](LEEME.md).
+La primera vez te pregunta si permites descargar carátulas, trucos y listas de compatibilidad: para eso envía el identificador de tus juegos a tinfoil y GitHub, y nada más tuyo. Se cambia cuando quieras en **☰ → Configuración → Internet**. La traducción con IA viene desactivada. Detalles en la [política de privacidad](POLITICA-DE-FIRMA.md#privacidad).
+
+Revisa también **☰ → Configuración**: las rutas de los emuladores y las carpetas de juegos se detectan solas, pero puedes cambiarlas. La guía completa, con cómo funciona cada parte, está en [LEEME.md](LEEME.md).
 
 ## Cómo se ve
 

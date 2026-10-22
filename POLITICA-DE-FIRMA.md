@@ -32,19 +32,21 @@ Quién puede escribir en el repositorio: [colaboradores de corpjorge/lanzador-sw
 
 Lanzador Switch **no tiene telemetría, cuentas ni analítica**. No envía tu configuración, tus partidas, tus claves ni tus archivos a ningún sitio. Lo que guarda queda en la carpeta `datos`, junto a `Lanzador.exe`.
 
-Para funcionar se conecta a estos servicios. Cada petición lleva, como cualquier conexión, tu dirección IP y el agente `LanzadorSwitch/1.0`.
+**La primera vez que lo abres te pregunta** si permites descargar carátulas, trucos y listas de compatibilidad, con enlace a esta sección. Hasta que respondes no descarga nada; si cierras el aviso sin elegir, vuelve a salir la próxima vez.
 
-| Servicio | Para qué | Qué dato tuyo lleva | Cuándo |
-|---|---|---|---|
-| tinfoil.media | Carátulas y fondos | El identificador (Title ID) de cada juego de tu biblioteca | Al cargar la biblioteca; lo descargado queda en caché |
-| tinfoil.io | Trucos y versiones (Build ID) | El Title ID del juego | Al abrir sus trucos; caché de 3 días |
-| raw.githubusercontent.com: [switch-cheats-db](https://github.com/HamletDuFromage/switch-cheats-db) | Trucos | El Title ID del juego | Al abrir sus trucos; caché de 3 días |
-| raw.githubusercontent.com: listas de [Ryubing](https://github.com/Ryubing/Compatibility), [Citron Neo](https://github.com/citron-neo/Citron-Compatability) y [yuzu](https://github.com/yuzu-mirror/api) | Compatibilidad | Ninguno: se descarga la lista completa | Ryubing cada semana, Citron cada día, yuzu una vez |
-| nightly.eden-emu.dev, stable.eden-emu.dev, git.eden-emu.dev, api.github.com y github.com (Citron Neo, Suyu) | Ver y descargar versiones de los emuladores | Ninguno | Al abrir la sección Emuladores; solo descarga cuando confirmas una instalación o actualización |
-| Anthropic (Claude Code) u OpenAI (Codex), con la herramienta y la cuenta que tengas instaladas | Traducir al español los nombres de los trucos | El nombre del juego y los nombres de sus trucos (nunca el código del truco) | Al abrir trucos que aún no están traducidos, si hay un motor de IA elegido |
+Estos son los servicios a los que puede conectarse. Cada petición lleva, como cualquier conexión, tu dirección IP y el agente `LanzadorSwitch/1.0`.
 
-- **Desactivar la traducción:** en ☰ → Configuración elige el motor «Ninguno». Así no se envía nada a Anthropic ni a OpenAI.
-- **Las demás conexiones** son parte de cómo funciona el lanzador y por ahora no se pueden desactivar desde Configuración.
+| Servicio | Para qué | Qué dato tuyo lleva | Cuándo | Cómo se desactiva |
+|---|---|---|---|---|
+| tinfoil.media | Carátulas y fondos | El identificador (Title ID) de cada juego de tu biblioteca | Al cargar la biblioteca; lo descargado queda en caché | Descargas (ver abajo) |
+| tinfoil.io | Trucos y versiones (Build ID) | El Title ID del juego | Al abrir sus trucos; caché de 3 días | Descargas |
+| raw.githubusercontent.com: [switch-cheats-db](https://github.com/HamletDuFromage/switch-cheats-db) | Trucos | El Title ID del juego | Al abrir sus trucos; caché de 3 días | Descargas |
+| raw.githubusercontent.com: listas de [Ryubing](https://github.com/Ryubing/Compatibility), [Citron Neo](https://github.com/citron-neo/Citron-Compatability) y [yuzu](https://github.com/yuzu-mirror/api) | Compatibilidad | Ninguno: se descarga la lista completa | Ryubing cada semana, Citron cada día, yuzu una vez | Descargas |
+| Anthropic (Claude Code) u OpenAI (Codex), con la herramienta y la cuenta que tengas instaladas | Traducir al español los nombres de los trucos | El nombre del juego y los nombres de sus trucos (nunca el código del truco) | Al abrir trucos sin traducir, **solo si elegiste un motor de IA** | Viene desactivado: motor «Ninguno» |
+| nightly.eden-emu.dev, stable.eden-emu.dev, git.eden-emu.dev, api.github.com y github.com (Citron Neo, Suyu) | Ver y descargar versiones de los emuladores | Ninguno | Al abrir la sección Emuladores; solo descarga cuando confirmas una instalación o actualización | No abrir la sección Emuladores |
+
+- **Descargas:** ☰ → Configuración → Internet → «Descargar carátulas, fondos, trucos y listas de compatibilidad». Desactivado, el lanzador usa solo lo que ya se descargó y no envía el identificador de tus juegos a nadie.
+- **Traducción con IA:** viene en «Ninguno». Si eliges Claude Code o Codex en ☰ → Configuración, los nombres se envían con tu propia cuenta de esa herramienta.
 - Políticas de privacidad de terceros: [GitHub](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement), [Anthropic](https://www.anthropic.com/legal/privacy) y [OpenAI](https://openai.com/policies/privacy-policy/). Las de tinfoil.io y tinfoil.media, en sus propios sitios.
 
 ## English summary
@@ -54,4 +56,4 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 - **What is signed:** only `Lanzador.exe`, built from this repository by the GitHub Actions workflow `.github/workflows/compilar.yml`. Third-party binaries (`SDL3.dll`) are shipped unsigned, as published upstream.
 - **Process:** every release is built from a `vX.Y.Z` tag, submitted to SignPath and manually approved by an approver before signing.
 - **Team:** committer, reviewer and approver: [corpjorge](https://github.com/corpjorge). All members use multi-factor authentication on GitHub and SignPath.
-- **Privacy:** no telemetry, accounts or analytics. The program contacts tinfoil.media and tinfoil.io (cover art, cheats; sends the game's Title ID), raw.githubusercontent.com (cheat database and compatibility lists), the emulators' release servers (update checks; no user data) and, only if a translation engine is selected, Anthropic or OpenAI through the user's own CLI (game and cheat names). Translation can be turned off in Settings.
+- **Privacy:** no telemetry, accounts or analytics. On first launch the program asks whether it may download cover art, cheats and compatibility lists, links to this policy, and downloads nothing until the user answers. If allowed, it contacts tinfoil.media and tinfoil.io (sends the game's Title ID) and raw.githubusercontent.com (cheat database and compatibility lists); this can be turned off at any time in Settings → Internet. AI translation is off by default; only if the user selects an engine are game and cheat names sent to Anthropic or OpenAI through the user's own CLI. The emulators' release servers are contacted only from the Emulators section and receive no user data.

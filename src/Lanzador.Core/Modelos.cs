@@ -66,8 +66,8 @@ public sealed class Configuracion
     public List<EmuladorConfig> Emuladores { get; set; } = new();
     public List<string> CarpetasJuegos { get; set; } = new();
 
-    /// <summary>"claude", "codex" o "ninguno".</summary>
-    public string MotorIA { get; set; } = "claude";
+    /// <summary>"claude", "codex" o "ninguno". Sin elegir no se traduce: traducir envía nombres a Anthropic u OpenAI.</summary>
+    public string MotorIA { get; set; } = "ninguno";
 
     /// <summary>Modelo a usar; vacío = el predeterminado de cada CLI.</summary>
     public string ModeloIA { get; set; } = "";
@@ -90,6 +90,15 @@ public sealed class Configuracion
     public string TeclaTrucos { get; set; } = "F7";
 
     public OpcionesActualizacion Actualizaciones { get; set; } = new();
+
+    /// <summary>
+    /// Descargar carátulas, fondos, trucos y listas de compatibilidad (envía el Title ID de cada juego a tinfoil y
+    /// GitHub). Si no, se usa solo lo que ya esté en caché.
+    /// </summary>
+    public bool ContenidoEnLinea { get; set; } = true;
+
+    /// <summary>Ya se respondió el aviso de conexiones a internet que sale la primera vez.</summary>
+    public bool AvisoPrivacidadVisto { get; set; }
 
     /// <summary>Emulador donde se configuran los mandos; desde él se copian a los demás (y a los que se instalen).</summary>
     public string OrigenControles { get; set; } = "eden";

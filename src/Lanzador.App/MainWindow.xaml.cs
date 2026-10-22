@@ -97,6 +97,8 @@ public partial class MainWindow : Window
             // Mientras corre la intro se cargan los juegos y las carátulas detrás.
             if (Estado.Config.MostrarIntro && !ReducirMovimiento && Environment.GetEnvironmentVariable("LANZADOR_PRUEBA") == null)
                 MostrarIntro();
+            if (!Estado.Config.AvisoPrivacidadVisto)
+                MostrarAvisoPrivacidad();
         };
         Closing += (_, e) =>
         {
@@ -117,9 +119,11 @@ public partial class MainWindow : Window
 
     public Seccion SeccionActual => _seccion;
 
-    /// <summary>Volumen, sonidos y animaciones según la configuración.</summary>
+    /// <summary>Volumen, sonidos, animaciones y descargas según la configuración.</summary>
     public void AplicarPreferencias()
     {
+        // Hasta responder el aviso de la primera vez no se descarga nada.
+        Http.ContenidoEnLinea = Estado.Config.ContenidoEnLinea && Estado.Config.AvisoPrivacidadVisto;
         Sonidos.Activados = Estado.Config.SonidosActivados;
         Sonidos.Volumen = Math.Clamp(Estado.Config.VolumenSonido, 0, 100) / 100.0;
         Sonidos.MantenerSalida(IsActive);
@@ -139,6 +143,38 @@ public partial class MainWindow : Window
     }
 
     public static bool ReducirMovimiento { get; private set; }
+
+    /// <summary>La sección de privacidad de la política de firma, en el repositorio público.</summary>
+    public const string UrlPrivacidad = "https://github.com/corpjorge/lanzador-switch/blob/main/POLITICA-DE-FIRMA.md#privacidad";
+
+    /// <summary>
+    /// Aviso de la primera vez: qué se descarga y qué se envía. Hasta responderlo no se descarga nada, y si se
+    /// cierra sin elegir vuelve a salir la próxima vez.
+    /// </summary>
+    private void MostrarAvisoPrivacidad() =>
+        AbrirMenu(new MenuEmergente("Conexiones a internet",
+            "Para mostrar carátulas, trucos y la compatibilidad de cada juego, el lanzador envía el identificador (Title ID) " +
+            "de tus juegos a tinfoil.media, tinfoil.io y GitHub. No envía nada más tuyo: ni partidas, ni configuración, ni archivos. " +
+            "Puedes cambiarlo cuando quieras en ☰ → Configuración → Internet.",
+        [
+            new OpcionMenu("Permitir las descargas", "Carátulas, fondos, trucos y listas de compatibilidad", () => ResponderAvisoPrivacidad(true)),
+            new OpcionMenu("No descargar nada", "Verás tus juegos sin carátulas, trucos nuevos ni compatibilidad", () => ResponderAvisoPrivacidad(false)),
+            new OpcionMenu("Leer la política de privacidad", UrlPrivacidad, () =>
+            {
+                Menus.Abrir(UrlPrivacidad, null);
+                MostrarAvisoPrivacidad();
+            }),
+        ]));
+
+    private void ResponderAvisoPrivacidad(bool permitir)
+    {
+        Estado.Config.ContenidoEnLinea = permitir;
+        Estado.Config.AvisoPrivacidadVisto = true;
+        Estado.GuardarConfig();
+        AplicarPreferencias();
+        if (permitir)
+            _ = Catalogo.DescargarFaltantesAsync();
+    }
 
     /// <summary>Abre una pantalla encima de la actual (Trucos, Configuración…).</summary>
     public void Mostrar(FrameworkElement pantalla)

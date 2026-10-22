@@ -181,7 +181,9 @@ public partial class PantallaTrucos : UserControl, IPantalla
         if (_buildId == null)
         {
             TextoVacio.Text = _catalogo.Versiones.Count == 0
-                ? "No encontré información de este juego en switch-cheats-db ni en tinfoil.io."
+                ? Http.ContenidoEnLinea
+                    ? "No encontré información de este juego en switch-cheats-db ni en tinfoil.io."
+                    : "Las descargas están desactivadas (☰ → Configuración → Internet), así que no puedo buscar los trucos de este juego."
                 : $"No conozco el Build ID de la {VersionDetectada.Texto(_version)}. Cambia la versión con ← →.";
             TextoVacio.Visibility = Visibility.Visible;
             Seleccionar(0);

@@ -24,6 +24,8 @@ public static class Imagenes
     {
         if (File.Exists(destino) && new FileInfo(destino).Length > 0)
             return destino;
+        if (!Http.ContenidoEnLinea)
+            return null;
         var marcaSinImagen = destino + ".nohay";
         if (File.Exists(marcaSinImagen) && DateTime.UtcNow - File.GetLastWriteTimeUtc(marcaSinImagen) < TimeSpan.FromDays(7))
             return null;

@@ -27,6 +27,13 @@ public static class Http
 {
     public static readonly HttpClient Cliente = Crear();
 
+    /// <summary>
+    /// Si es false (Configuración → Internet, o mientras no se responde el aviso de la primera vez), no se descargan
+    /// carátulas, fondos, trucos ni listas de compatibilidad: solo se usa lo que ya está en caché. Las actualizaciones
+    /// de emuladores no dependen de esto.
+    /// </summary>
+    public static bool ContenidoEnLinea { get; set; } = true;
+
     private static HttpClient Crear()
     {
         var cliente = new HttpClient(new SocketsHttpHandler
@@ -43,12 +50,14 @@ public static class Http
 
     /// <summary>
     /// Descarga un texto y lo guarda en caché. Devuelve "" si el servidor responde 404.
-    /// Sin internet, usa la copia guardada aunque esté vencida.
+    /// Sin internet, usa la copia guardada aunque esté vencida; con las descargas desactivadas, también.
     /// </summary>
     public static async Task<string> TextoConCacheAsync(string url, string archivoCache, TimeSpan vigencia, bool forzar, CancellationToken ct)
     {
         if (!forzar && File.Exists(archivoCache) && DateTime.UtcNow - File.GetLastWriteTimeUtc(archivoCache) < vigencia)
             return await File.ReadAllTextAsync(archivoCache, ct);
+        if (!ContenidoEnLinea)
+            return File.Exists(archivoCache) ? await File.ReadAllTextAsync(archivoCache, ct) : "";
 
         try
         {

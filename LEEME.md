@@ -143,6 +143,13 @@ Cómo actualiza:
 
 El lanzador **no descarga, no incluye y no instala** claves (`prod.keys`, `title.keys`) ni firmware. Cada emulador necesita los suyos, sacados de tu propia consola; se ponen con las opciones del propio emulador. El lanzador nunca toca las carpetas `user` ni `portable`, que es donde quedan.
 
+## Internet y privacidad
+
+- **Aviso de la primera vez:** al abrir el lanzador por primera vez pregunta si permites descargar carátulas, fondos, trucos y listas de compatibilidad, y enlaza la [política de privacidad](POLITICA-DE-FIRMA.md#privacidad). Hasta que respondes no descarga nada; si cierras el aviso sin elegir, vuelve a salir la próxima vez.
+- **Qué envía:** para las carátulas y los trucos, el identificador (Title ID) de tus juegos a tinfoil.media, tinfoil.io y GitHub. Las listas de compatibilidad se bajan completas, sin datos tuyos. No hay telemetría, cuentas ni analítica.
+- **Desactivarlo:** ☰ → Configuración → Internet. Desactivado, usa solo lo que ya se descargó: los juegos cuyos trucos nunca se bajaron no muestran trucos, y la pantalla lo avisa. Al volver a activarlo, baja enseguida las carátulas y las listas que falten.
+- **Actualizaciones de emuladores:** se consultan solo en la sección Emuladores y no envían nada de tus juegos.
+
 ## Datos del lanzador
 
 Todo vive en la carpeta `datos`, junto a `Lanzador.exe`:
@@ -154,7 +161,7 @@ Todo vive en la carpeta `datos`, junto a `Lanzador.exe`:
 
 ## Traducción con IA
 
-En Configuración eliges el motor (Claude Code, Codex o ninguno) y, opcionalmente, el modelo. El botón **Probar traducción** comprueba que funcione.
+Viene desactivada (motor «Ninguno»). En Configuración eliges el motor (Claude Code o Codex) y, opcionalmente, el modelo. Traducir envía el nombre del juego y los de sus trucos (nunca su código) a Anthropic u OpenAI, con tu cuenta de esa herramienta. El botón **Probar traducción** comprueba que funcione.
 
 - **Claude Code:** si sale "OAuth session expired", abre una terminal, ejecuta `claude` y usa `/login`.
 - **Codex:** si tu cuenta no admite el modelo de tu `config.toml`, escribe en el campo Modelo uno que sí admita, o actualiza Codex y vuelve a iniciar sesión.
@@ -169,5 +176,5 @@ En Steam ve a *Juegos → Añadir un juego que no es de Steam* y elige `Lanzador
 - **Pruebas del núcleo:** `dotnet run --project src\Lanzador.Pruebas`. Trabajan sobre copias y no modifican los emuladores; agrega `-- --ia` para probar también la traducción. Leen la configuración real de `app\` junto a `Lanzador.slnx` (o de la carpeta en `LANZADOR_APP`), así que algunas comprobaciones esperan Eden y Ryujinx instalados y juegos concretos en la biblioteca: si no los tienes, fallan sin cambiar nada. Las pruebas del actualizador simulan instalaciones con carpetas `user` y `portable` falsas y descargan de un servidor falso; de internet solo consultan qué versión está publicada.
 - **Publicar:** `dotnet publish src\Lanzador.App -c Release -o app`.
 - **Paquete de una versión:** `pwsh herramientas\empaquetar.ps1` arma en `publicar\` el ZIP portable y `SHA256SUMS.txt`. Por fases (`-Fase Publicar`, firmar, `-Fase Comprimir`) es como lo hace GitHub Actions en `.github\workflows\compilar.yml`, que con un tag `v*` pide la firma a SignPath (ver `POLITICA-DE-FIRMA.md`).
-- **Modo de prueba de la interfaz:** variables `LANZADOR_PRUEBA="Ir:Kirby,Trucos,Esperar5000,Abajo"` y `LANZADOR_CAPTURAS=<carpeta>`. Abre la app, simula esas acciones y guarda una captura tras cada una. También admite `Seccion:Emuladores` (cambiar de sección), `Intro` (repetir la intro; en modo de prueba no sale sola), `Negro:<juego>` y `QuitarNegro` (la pantalla de «abriendo juego» sin abrir ningún emulador), `Escucha` (activar la escucha de PS5 y Pro), `VentanaTrucos:<juego>` (la ventana de trucos sin abrir el emulador; guarda `ventana-trucos.png`), `TeclaTrucos` (comprueba que se puede registrar la tecla), `Aviso:<texto>` y `Error:<texto>` (mostrar un aviso) y `GuardarSonidos` (guarda cada sonido como WAV en la carpeta de capturas). Con `LANZADOR_AUDIO_LOG=<archivo>` anota cada sonido y cuándo se abre o cierra la salida de audio; el primer fallo de audio de cada sesión queda además en `datos\errores.log`. Usa `LANZADOR_DATOS` con una copia de `app\datos` para no tocar tu configuración.
+- **Modo de prueba de la interfaz:** variables `LANZADOR_PRUEBA="Ir:Kirby,Trucos,Esperar5000,Abajo"` y `LANZADOR_CAPTURAS=<carpeta>`. Abre la app, simula esas acciones y guarda una captura tras cada una. También admite `Seccion:Emuladores` (cambiar de sección), `Intro` (repetir la intro; en modo de prueba no sale sola), `Negro:<juego>` y `QuitarNegro` (la pantalla de «abriendo juego» sin abrir ningún emulador), `Escucha` (activar la escucha de PS5 y Pro), `VentanaTrucos:<juego>` (la ventana de trucos sin abrir el emulador; guarda `ventana-trucos.png`), `TeclaTrucos` (comprueba que se puede registrar la tecla), `Aviso:<texto>` y `Error:<texto>` (mostrar un aviso) y `GuardarSonidos` (guarda cada sonido como WAV en la carpeta de capturas). Con `LANZADOR_AUDIO_LOG=<archivo>` anota cada sonido y cuándo se abre o cierra la salida de audio; el primer fallo de audio de cada sesión queda además en `datos\errores.log`. Usa `LANZADOR_DATOS` con una copia de `app\datos` para no tocar tu configuración. Si en esa copia `AvisoPrivacidadVisto` no está en `true`, el aviso de la primera vez sale también en el modo de prueba (lo responde la primera acción, p. ej. `Aceptar` para permitir las descargas).
 - **Probar el actualizador sin tocar los emuladores reales:** pon `LANZADOR_DATOS=<carpeta temporal>` con un `config.json` cuyas rutas de Eden y Citron apunten a instalaciones falsas.

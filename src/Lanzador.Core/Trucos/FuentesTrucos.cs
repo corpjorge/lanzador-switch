@@ -78,6 +78,8 @@ public static partial class FuentesTrucos
     public static async Task<CatalogoTrucos> CargarAsync(string titleId, bool forzar, CancellationToken ct)
     {
         var catalogo = new CatalogoTrucos { TitleId = titleId };
+        if (!Http.ContenidoEnLinea)
+            catalogo.Avisos.Add("Las descargas están desactivadas en Configuración → Internet: solo se usa lo que ya se había descargado.");
         try
         {
             await CargarSwitchCheatsDbAsync(catalogo, forzar, ct);

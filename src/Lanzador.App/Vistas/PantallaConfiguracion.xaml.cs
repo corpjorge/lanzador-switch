@@ -33,6 +33,7 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         ComboMotor.SelectedItem = ComboMotor.Items.Cast<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == _copia.MotorIA) ?? ComboMotor.Items[0];
         CampoModelo.Text = _copia.ModeloIA;
         CasillaPantallaCompleta.IsChecked = _copia.PantallaCompleta;
+        CasillaContenidoEnLinea.IsChecked = _copia.ContenidoEnLinea;
         Elegir(ComboCanalEden, _copia.Actualizaciones.CanalEden);
         Elegir(ComboVarianteCitron, _copia.Actualizaciones.VarianteCitron);
         CasillaSonidos.IsChecked = _copia.SonidosActivados;
@@ -206,6 +207,9 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         _copia.MotorIA = MotorElegido;
         _copia.ModeloIA = CampoModelo.Text.Trim();
         _copia.PantallaCompleta = CasillaPantallaCompleta.IsChecked == true;
+        // Elegirlo aquí cuenta como respuesta al aviso de la primera vez.
+        _copia.ContenidoEnLinea = CasillaContenidoEnLinea.IsChecked == true;
+        _copia.AvisoPrivacidadVisto = true;
         _copia.SonidosActivados = CasillaSonidos.IsChecked == true;
         _copia.VolumenSonido = ComboVolumen.SelectedItem is ComboBoxItem { Tag: int volumen } ? volumen : 60;
         _copia.ReducirMovimiento = CasillaReducirMovimiento.IsChecked == true;
@@ -218,6 +222,7 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
 
         var carpetasCambiaron = !_copia.CarpetasJuegos.SequenceEqual(Estado.Config.CarpetasJuegos, StringComparer.OrdinalIgnoreCase);
         var emuladoresCambiaron = JsonSerializer.Serialize(_copia.Emuladores) != JsonSerializer.Serialize(Estado.Config.Emuladores);
+        var descargasActivadas = _copia.ContenidoEnLinea && !Http.ContenidoEnLinea;
         Estado.Config = _copia;
         Estado.ErrorIA = null;
         Estado.GuardarConfig();
@@ -230,9 +235,13 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         ventana.Aviso("Configuración guardada.");
         if (carpetasCambiaron || emuladoresCambiaron)
             _ = Catalogo.CargarAsync(false);
+        else if (descargasActivadas)
+            _ = Catalogo.DescargarFaltantesAsync();
     }
 
     private void AlCancelar(object sender, RoutedEventArgs e) => MainWindow.Actual.Volver();
+
+    private void AlLeerPrivacidad(object sender, RoutedEventArgs e) => Menus.Abrir(MainWindow.UrlPrivacidad, null);
 
     /// <summary>Al cambiar el volumen suena «Elegir» con el nuevo volumen, para probarlo.</summary>
     private void AlCambiarVolumen(object sender, SelectionChangedEventArgs e)

@@ -26,6 +26,17 @@ public static class Catalogo
     /// <summary>Carga la lista solo si todavía no se cargó.</summary>
     public static Task AsegurarAsync() => _carga ??= CargarInternoAsync(false);
 
+    /// <summary>
+    /// Al permitir las descargas: baja las carátulas y la compatibilidad de los juegos ya cargados (los mismos
+    /// objetos que muestran las pantallas), cuando termine la carga en curso si la hay.
+    /// </summary>
+    public static async Task DescargarFaltantesAsync()
+    {
+        if (_carga != null)
+            await Task.WhenAny(_carga);
+        await Task.WhenAll(CargarIconosAsync(Estado.Juegos), CargarCompatibilidadAsync(false));
+    }
+
     /// <summary>Vuelve a buscar los juegos (y, si se pide, a descargar la compatibilidad).</summary>
     public static Task CargarAsync(bool forzarDescargas)
     {
@@ -59,7 +70,11 @@ public static class Catalogo
         Mensaje = Estado.Juegos.Count == 0 ? "No encontré juegos. Revisa las carpetas en Configuración (botón ☰ o tecla M)." : null;
         AvisarCambio();
         _ = CargarIconosAsync(Estado.Juegos);
+        await CargarCompatibilidadAsync(forzarDescargas);
+    }
 
+    private static async Task CargarCompatibilidadAsync(bool forzarDescargas)
+    {
         try
         {
             Estado.Compatibilidad = await Compatibilidad.CargarRyubingAsync(forzarDescargas, CancellationToken.None);

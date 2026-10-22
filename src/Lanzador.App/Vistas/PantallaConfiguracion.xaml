@@ -52,12 +52,22 @@
                     <Button Content="Usar las de Eden y Ryujinx" Style="{StaticResource BotonPlano}" Click="AlDetectarCarpetas"/>
                 </WrapPanel>
 
+                <TextBlock Text="Internet" Style="{StaticResource title}" Margin="0,28,0,12"/>
+                <CheckBox x:Name="CasillaContenidoEnLinea" Content="Descargar carátulas, fondos, trucos y listas de compatibilidad" Style="{StaticResource Casilla}"/>
+                <TextBlock Style="{StaticResource caption}" TextWrapping="Wrap" TextTrimming="None"
+                           Text="Envía el identificador (Title ID) de tus juegos a tinfoil.media, tinfoil.io y GitHub. Desactivado, se usa solo lo que ya se descargó. Las actualizaciones de emuladores se buscan aparte, en la sección Emuladores."/>
+                <WrapPanel>
+                    <Button Content="Leer la política de privacidad" Style="{StaticResource BotonPlano}" Click="AlLeerPrivacidad"/>
+                </WrapPanel>
+
                 <TextBlock Text="Traducción de trucos con IA" Style="{StaticResource title}" Margin="0,28,0,12"/>
+                <TextBlock Style="{StaticResource caption}" TextWrapping="Wrap" TextTrimming="None" Margin="0,0,0,8"
+                           Text="Traducir envía el nombre del juego y los de sus trucos (nunca su código) a Anthropic (Claude Code) u OpenAI (Codex), con tu cuenta."/>
                 <TextBlock Text="Motor" Style="{StaticResource caption}"/>
                 <ComboBox x:Name="ComboMotor" Style="{StaticResource Selector}" Margin="0,4,0,10" Width="360" HorizontalAlignment="Left">
+                    <ComboBoxItem Content="Ninguno (no traducir)" Tag="ninguno"/>
                     <ComboBoxItem Content="Claude Code" Tag="claude"/>
                     <ComboBoxItem Content="Codex" Tag="codex"/>
-                    <ComboBoxItem Content="Ninguno (no traducir)" Tag="ninguno"/>
                 </ComboBox>
                 <TextBlock Text="Modelo (vacío = el predeterminado del CLI; para Claude, p. ej. haiku o sonnet)" Style="{StaticResource caption}"/>
                 <TextBox x:Name="CampoModelo" Style="{StaticResource Campo}" Width="360" HorizontalAlignment="Left"/>
