@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Configuración del artefacto para SignPath (se copia en el proyecto de SignPath como configuración predeterminada).
+  El artefacto es "Lanzador-sin-firmar" de .github/workflows/compilar.yml: el contenido de publicar/Lanzador.
+  Solo se firma Lanzador.exe, compilado de este repositorio. SDL3.dll es de SDL (licencia zlib) y va sin firmar;
+  LEEME.md, LICENSE, THIRD-PARTY-NOTICES.md y Fuentes/ no son ejecutables.
+  El parámetro "version" lo pasa el workflow desde <Version> de src/Lanzador.App/Lanzador.App.csproj.
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="Lanzador.exe" product-name="Lanzador Switch" product-version="${version}">
+      <authenticode-sign/>
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

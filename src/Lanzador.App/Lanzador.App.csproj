@@ -27,6 +27,8 @@
     <RootNamespace>Lanzador.App</RootNamespace>
     <Product>Lanzador Switch</Product>
     <Version>1.0.0</Version>
+    <!-- La versión de producto queda en "1.0.0" sin "+<commit>": SignPath la compara al firmar. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Copyright>Copyright (c) 2026 corpjorge · MIT</Copyright>
     <ApplicationIcon>Icono\Lanzador.ico</ApplicationIcon>
   </PropertyGroup>

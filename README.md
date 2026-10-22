@@ -73,6 +73,12 @@ pwsh herramientas\empaquetar.ps1                   # ZIP portable y SHA256SUMS.t
 
 El código está en `src\Lanzador.Core` (núcleo), `src\Lanzador.App` (interfaz WPF) y `src\Lanzador.Pruebas` (pruebas).
 
+Los paquetes de cada versión los arma GitHub Actions desde este repositorio ([`compilar.yml`](.github/workflows/compilar.yml)).
+
+## Política de firma de código (Code signing policy)
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org). La firma está pendiente de aprobación: hasta entonces los paquetes no van firmados. Qué se firma, quién lo aprueba y a qué servicios se conecta el lanzador: [POLITICA-DE-FIRMA.md](POLITICA-DE-FIRMA.md).
+
 ## Licencia
 
 [MIT](LICENSE). Los componentes de terceros (SDL3, fuentes Sora, Lexend y JetBrains Mono, .NET) tienen sus propias licencias: ver [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

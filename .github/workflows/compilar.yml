@@ -1,0 +1,105 @@
+# Compila y empaqueta el lanzador desde este repositorio: ZIP portable autocontenido y SHA256SUMS.txt.
+# Con un tag v* (o a mano con «firmar») pide la firma de Lanzador.exe a SignPath, que la aprueba un approver.
+# No publica nada: el paquete queda como artefacto del workflow y el release se crea a mano.
+# Política de firma: POLITICA-DE-FIRMA.md
+name: Compilar y empaquetar
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      firmar:
+        description: Pedir la firma a SignPath (hay que aprobarla allí)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  compilar:
+    runs-on: windows-latest
+    env:
+      # Se configuran en Settings → Secrets and variables → Actions cuando SignPath apruebe el proyecto.
+      # Sin el secreto, el paso de firma se salta y el paquete sale sin firmar.
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+      FIRMAR: ${{ startsWith(github.ref, 'refs/tags/v') || inputs.firmar == true }}
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v7
+
+      - name: Instalar .NET 10
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Compilar la solución
+        run: dotnet build Lanzador.slnx -c Release
+
+      # Las pruebas de src/Lanzador.Pruebas leen emuladores y juegos instalados, así que no se ejecutan aquí.
+
+      - name: Publicar (autocontenido, un solo .exe)
+        id: paquete
+        run: ./herramientas/empaquetar.ps1 -Fase Publicar
+
+      - name: Subir la carpeta sin firmar
+        id: sin-firmar
+        uses: actions/upload-artifact@v7
+        with:
+          name: Lanzador-sin-firmar
+          path: publicar/Lanzador/
+          if-no-files-found: error
+
+      - name: Firmar Lanzador.exe con SignPath
+        id: firma
+        if: env.FIRMAR == 'true' && env.SIGNPATH_API_TOKEN != ''
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          github-artifact-id: ${{ steps.sin-firmar.outputs.artifact-id }}
+          wait-for-completion: true
+          # La firma espera la aprobación manual en SignPath: hay una hora para darla.
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: publicar/firmado
+          parameters: |
+            version: "${{ steps.paquete.outputs.version }}"
+
+      - name: Usar los archivos firmados
+        if: steps.firma.outcome == 'success'
+        run: |
+          Copy-Item publicar/firmado/* publicar/Lanzador -Recurse -Force
+          $firma = Get-AuthenticodeSignature publicar/Lanzador/Lanzador.exe
+          if ($firma.Status -ne 'Valid') { throw "La firma de Lanzador.exe no es válida: $($firma.Status) $($firma.StatusMessage)" }
+
+      - name: Armar el ZIP y SHA256SUMS.txt
+        run: ./herramientas/empaquetar.ps1 -Fase Comprimir
+
+      - name: Subir el paquete
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.paquete.outputs.nombre }}
+          path: |
+            publicar/*.zip
+            publicar/SHA256SUMS.txt
+          if-no-files-found: error
+          compression-level: 0
+
+      - name: Resumen
+        run: |
+          $firma = Get-AuthenticodeSignature publicar/Lanzador/Lanzador.exe
+          $estado = if ($firma.Status -eq 'Valid') { "firmado por $($firma.SignerCertificate.Subject)" } else { 'sin firmar' }
+          @(
+            "### ${{ steps.paquete.outputs.nombre }}"
+            ''
+            "- Commit: ``${{ github.sha }}``"
+            "- Lanzador.exe: $estado"
+            "- SHA256SUMS.txt: ``$((Get-Content publicar/SHA256SUMS.txt -Raw).Trim())``"
+          ) | Add-Content $env:GITHUB_STEP_SUMMARY
