@@ -3,9 +3,9 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-// Icono del lanzador: mando genérico blanco con un triángulo de «jugar» recortado, sobre un cuadrado
+// Icono alternativo: mando genérico blanco con un triángulo de «jugar» recortado, sobre un cuadrado
 // redondeado con el azul del Design System (accent-500 / focus). En 16-24 px solo el triángulo.
-// Uso: dotnet run --project herramientas\GeneradorIcono -- src\Lanzador.App\Icono\Lanzador.ico
+// Uso: dotnet run --project herramientas\GeneradorIcono -- publicar\Icono-alternativo.ico
 // (deja también icono-<tamaño>.png junto al .ico para revisarlo).
 static class Programa
 {

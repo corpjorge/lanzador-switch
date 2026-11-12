@@ -12,7 +12,7 @@
   <ItemGroup>
     <!-- Fuentes del Design System (SIL OFL 1.1): van dentro del ejecutable; sus licencias, junto a él. -->
     <Resource Include="Fuentes\*.ttf" />
-    <!-- Icono propio: se genera con herramientas\GeneradorIcono -->
+    <!-- Windows y la ventana WPF usan el mismo icono. -->
     <Resource Include="Icono\Lanzador.ico" />
     <None Include="Fuentes\OFL-*.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
@@ -26,7 +26,7 @@
     <AssemblyName>Lanzador</AssemblyName>
     <RootNamespace>Lanzador.App</RootNamespace>
     <Product>Lanzador Switch</Product>
-    <Version>1.1.1</Version>
+    <Version>1.1.2</Version>
     <!-- La versión de producto queda sin "+<commit>": SignPath la compara al firmar. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Copyright>Copyright (c) 2026 corpjorge · MIT</Copyright>

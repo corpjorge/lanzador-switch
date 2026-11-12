@@ -87,7 +87,7 @@ El lanzador también se maneja con el **Pro Controller y mandos PlayStation**, s
 
 - **Diseño:** sigue el Design System «Lanzador Switch» (colores, tipografía, tamaños y tiempos de animación). Los mismos valores están en `src\Lanzador.App\Tema\Tokens.xaml`.
 - **Escala de tele:** todo se dibuja para 1920 × 1080 y se escala a la altura de la ventana, así se ve igual en un monitor que en una tele 4K.
-- **Icono:** un mando genérico con el triángulo de «jugar», en el azul del Design System (`src\Lanzador.App\Icono\Lanzador.ico`, de 16 a 256 px). Se dibuja con `herramientas\GeneradorIcono`.
+- **Icono:** el símbolo rojo de los Joy-Con (`src\Lanzador.App\Icono\Lanzador.ico`, de 16 a 256 px) aparece en el ejecutable, en la ventana y en los accesos directos que usan el icono del ejecutable.
 - **Fuentes:** Sora (títulos), Lexend (texto) y JetBrains Mono (identificadores). Van dentro del ejecutable; sus licencias (SIL OFL 1.1) están en la carpeta `Fuentes`, junto a `Lanzador.exe`.
 - **Sonidos:** el lanzador los genera al momento, sin archivos de terceros: paso al moverse, borde, elegir, volver, encender y apagar un truco, aplicado, error, y un barrido al abrir un juego, con fundido a negro. Mientras el lanzador está al frente mantiene abierta la salida de audio (tocando silencio), porque las salidas HDMI se duermen y se comerían los sonidos cortos; al pasar al juego la suelta.
 - **Intro:** al abrir el lanzador aparece «Switch» con su resplandor, un destello y el sonido de arranque (≈ 2 s) mientras se cargan los juegos detrás. Cualquier botón o tecla la salta; no aparece al volver de un juego ni con «reducir movimiento».

@@ -53,4 +53,4 @@ No se redistribuyen: el lanzador los descarga en tu equipo cuando hace falta, y 
 
 ## Marcas
 
-Nintendo Switch es una marca de Nintendo. Este proyecto no está afiliado, patrocinado ni aprobado por Nintendo, ni por los proyectos de los emuladores. No incluye juegos, claves ni firmware.
+Nintendo Switch y el símbolo de los Joy-Con pertenecen a Nintendo. Este proyecto no está afiliado, patrocinado ni aprobado por Nintendo, ni por los proyectos de los emuladores. No incluye juegos, claves ni firmware.
