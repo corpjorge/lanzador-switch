@@ -2,9 +2,9 @@
 
 Lanzador estilo Big Picture para abrir tus juegos con **Eden**, **Ryujinx**, **Citron Neo** o **Suyu**, ver su compatibilidad, manejar trucos en español según la versión del juego y mantener al día los emuladores.
 
-**Para abrirlo:** `Lanzador.exe` (en la carpeta del ZIP descargado, o en `app\` si lo compilaste tú).
+**Para abrirlo:** desde el menú Inicio si usaste el instalador, o con `Lanzador.exe` (en la carpeta del ZIP descargado, o en `app\` si lo compilaste tú).
 
-Para crear o actualizar un acceso directo en el Escritorio, abre PowerShell en la carpeta extraída y ejecuta `.\Crear-acceso-directo.ps1`. Usa `-Nombre Switch` para elegir el nombre y `-Icono "C:\ruta\Switch.ico"` para usar tu propio icono.
+Para crear o actualizar a mano un acceso directo en el Escritorio, abre PowerShell en la carpeta del lanzador y ejecuta `.\Crear-acceso-directo.ps1`. Usa `-Nombre Switch` para elegir el nombre y `-Icono "C:\ruta\Switch.ico"` para usar tu propio icono.
 
 ## Cómo se usa
 
@@ -17,7 +17,7 @@ Arriba están las secciones **Inicio · Biblioteca · Emuladores · Controles**.
 | X | T | Trucos | Trucos | Trucos | Volver a descargar los trucos |
 | Y | O | Página del juego (más opciones) | Cambiar de filtro | Favorito sí / no | Traducir de nuevo |
 | Vista | V | — | — | — | Apagar todos los trucos activos de un golpe, o volver a encender exactamente los que estaban (ni uno más) |
-| ☰ (Menú) | M | Menú: configuración, recargar, pantalla completa, salir | Menú | Más (preferido, carpeta, tinfoil.io) | Aplicar cambios |
+| ☰ (Menú) | M | Menú: configuración, convertir NSZ a NSP, buscar actualizaciones, recargar, pantalla completa, salir | Menú | Más (preferido, carpeta, tinfoil.io) | Aplicar cambios |
 | LB / RB | Q / E | Sección | Sección | Cambiar de emulador | Cambiar de emulador |
 | Cruceta / stick | Flechas | Moverse por las filas | Moverse por la cuadrícula | Moverse por las filas | Moverse; en la fila de versión, ← → cambia la versión |
 | — | F11 | Pantalla completa / ventana | | | |
@@ -63,7 +63,19 @@ Los mandos se configuran **en el lanzador** y se escriben en Eden, Citron, Suyu 
 | A | **Detectar:** pulsas un botón en el mando que quieres y queda asignado a ese jugador (sirve para distinguir dos mandos iguales) |
 | Y | Tipo de mando: Pro Controller, Joy-Con dobles o sueltos, Portátil |
 | X | **Aplicar a todos los emuladores** (tienen que estar cerrados; se guarda un respaldo) |
-| ☰ | Más: empezar desde los mandos de un emulador, abrir un emulador para ajustar botones uno por uno |
+| ☰ | Más: activar o desactivar los mandos automáticos, empezar desde los mandos de un emulador, abrir un emulador para ajustar botones uno por uno |
+
+### Mandos automáticos
+
+Vienen activados. **Al abrir un juego**, el lanzador mira qué mandos están encendidos y los pone como primeros jugadores en el emulador que se abre:
+
+1. Primero los mandos de esta lista que estén encendidos, en su orden de jugador (es tu orden de preferencia), con el tipo que les pusiste.
+2. Después, cualquier otro mando encendido.
+3. Los mandos apagados no se asignan, y no quedan huecos.
+
+Así, si solo está encendido el mando que tenías como jugador 2, pasa a ser el jugador 1 y puedes jugar; y si conectas un mando nuevo, entra solo. La pantalla de «abriendo» muestra el reparto cuando cambia algo (`Mandos: J1 DualSense`). Enciende los mandos **antes** de abrir el juego: el reparto se hace en ese momento.
+
+No hace nada si no hay ningún mando encendido, si el emulador ya los tenía así o si ya estaba abierto. Usa la misma asignación de botones que «Aplicar» y guarda respaldo. Se desactiva en **☰ → Desactivar los mandos automáticos**: entonces cada emulador usa siempre los jugadores de la lista.
 
 **Hasta 8 jugadores**, como en Switch. Windows solo deja usar **4 mandos Xbox a la vez**, porque XInput admite cuatro; los emuladores tienen el mismo límite. Para los jugadores 5 a 8 usa mandos que no sean Xbox: Pro Controller, Joy-Con o PlayStation.
 
@@ -121,13 +133,15 @@ En la sección **Emuladores** (LB / RB desde Inicio, o ☰ → Emuladores) ves l
 | Eden | Nightly: `nightly.eden-emu.dev`, zip `…-amd64-clang-pgo.zip`. Estable: la API de `git.eden-emu.dev`, con el sha256 de `stable.eden-emu.dev` | Por el texto "Eden Nightly &lt;hash&gt;" de `eden.exe` o por el registro `user\log\eden_log.txt` |
 | Citron Neo | GitHub `citron-neo/CI`, release `nightly-windows` (variante clang-cl o clangtron) | Por lo que instaló el lanzador |
 | Suyu | GitHub `suyu-emu/suyu-main`, último release, `suyu-windows-x86_64.zip` | Por lo que instaló el lanzador |
-| Ryujinx | Solo abre `ryujinx.app/download`, porque su servidor de actualizaciones (`update.ryujinx.app`) no respondía al crear el lanzador | Por las propiedades de `Ryujinx.exe` |
+| Ryujinx | Ryubing **Canary**: los releases de `git.ryujinx.app/Ryubing/Canary`, zip `ryujinx-canary-<versión>-win_x64.zip` | Por las propiedades de `Ryujinx.exe` |
 
 El canal de Eden y la variante de Citron se eligen en Configuración.
 
+**Aviso al abrir el lanzador:** si hay una versión nueva del lanzador o de algún emulador instalado, sale un aviso con lo que hay (`Eden: abc → def`) y eliges: actualizar todos, uno solo, o «Ahora no». Nada se instala sin confirmarlo. Solo avisa de los emuladores cuya versión instalada conoce. Se apaga en **Configuración → Actualizaciones**, y se puede buscar a mano en **☰ → Buscar actualizaciones**.
+
 Cómo actualiza:
 1. Comprueba que el emulador esté cerrado.
-2. Descarga a una carpeta temporal y verifica el **sha256** publicado. Si no coincide, o si la fuente no lo publica, no instala nada.
+2. Descarga a una carpeta temporal y verifica el **sha256** publicado. Si no coincide, no instala nada. Ryubing no publica el sha256 de sus archivos: en su caso se comprueba que la descarga venga de su servidor por HTTPS, que tenga exactamente el tamaño publicado y que traiga `Ryujinx.exe`. De cualquier otra fuente sin sha256 no se instala nada.
 3. Extrae en otra carpeta temporal. Si el zip trae una carpeta raíz, usa lo que hay dentro.
 4. Respalda los archivos que va a reemplazar en `datos\respaldos\<emulador>-<fecha>`. Guarda los 3 respaldos más recientes de cada emulador.
 5. Copia los archivos nuevos encima de la instalación.
@@ -140,6 +154,35 @@ Cómo actualiza:
   1. crea siempre su carpeta de datos junto al ejecutable (`user`, o `portable` en Ryujinx), así quedan en modo portable y nada se va a `AppData`;
   2. los activa;
   3. les pone los mandos elegidos en Controles.
+
+## Actualizar el lanzador
+
+Al abrirse (y en **☰ → Buscar actualizaciones**) el lanzador compara su versión con el tag del último release de `github.com/corpjorge/lanzador-switch`. Si hay uno más nuevo:
+
+1. Descarga su instalador (`LanzadorSwitch-<versión>-win-x64-instalador.exe`) a una carpeta temporal.
+2. Verifica su **sha256** (el que publica GitHub para el archivo o, si falta, el de `SHA256SUMS.txt` del mismo release). Si no coincide no instala nada.
+3. Ejecuta el instalador sobre la carpeta donde está el lanzador, se cierra y el instalador lo vuelve a abrir.
+
+La carpeta `datos` no se toca. Si el release no trae instalador (versiones hasta la 1.1.2), el aviso solo abre su página. Para probar el aviso sin publicar nada, abre el lanzador con la variable `LANZADOR_VERSION=1.0.0`.
+
+## Convertir NSZ a NSP
+
+**☰ → Convertir juegos NSZ a NSP** lista los `.nsz` de tus carpetas de juegos (juegos, actualizaciones y DLC) y qué se puede hacer con cada uno:
+
+| Estado | Qué significa | A |
+|---|---|---|
+| Se puede convertir | Muestra cuánto ocupará el `.nsp` | Convertir |
+| Ya tiene su NSP | Hay un `.nsp` con el mismo nombre al lado | Verificarlo |
+| Convertido y verificado | El `.nsp` está completo | Enviar el `.nsz` a la papelera (pregunta antes) |
+| No compatible | Los `.xcz` todavía no se convierten aquí | — |
+
+**X** convierte todos los que faltan, uno tras otro; **Y** abre las opciones; **B** cancela una conversión en curso.
+
+- El `.nsp` se crea en la misma carpeta que el `.nsz`, primero como `.nsp.parcial`; solo recibe su nombre definitivo si pasa la verificación.
+- **Verificación:** el nombre de cada archivo de contenido (NCA) de un juego son los primeros 16 bytes de su sha256. Al terminar se comprueba cada uno: si todos coinciden, el `.nsp` es idéntico, NCA por NCA, al que se comprimió.
+- **El `.nsz` nunca se modifica.** Solo cuando su `.nsp` quedó verificado aparece la opción de enviarlo a la papelera de reciclaje, y lo predeterminado es conservarlo.
+- No usa programas externos ni necesita claves: descomprime el formato de [nsz](https://github.com/nicoboss/nsz) (zstd) y vuelve a cifrar cada sección con los datos que trae el propio archivo.
+- Antes de empezar comprueba que haya espacio en el disco. Al salir, la biblioteca se vuelve a leer.
 
 ## Claves y firmware
 
@@ -159,7 +202,7 @@ Solo se escribe en la carpeta de claves del emulador y en la de firmware de su N
 - **Aviso de la primera vez:** al abrir el lanzador por primera vez pregunta si permites descargar carátulas, fondos, trucos y listas de compatibilidad, y enlaza la [política de privacidad](POLITICA-DE-FIRMA.md#privacidad). Hasta que respondes no descarga nada; si cierras el aviso sin elegir, vuelve a salir la próxima vez.
 - **Qué envía:** para las carátulas y los trucos, el identificador (Title ID) de tus juegos a tinfoil.media, tinfoil.io y GitHub. Las listas de compatibilidad se bajan completas, sin datos tuyos. No hay telemetría, cuentas ni analítica.
 - **Desactivarlo:** ☰ → Configuración → Internet. Desactivado, usa solo lo que ya se descargó: los juegos cuyos trucos nunca se bajaron no muestran trucos, y la pantalla lo avisa. Al volver a activarlo, baja enseguida las carátulas y las listas que falten.
-- **Actualizaciones de emuladores:** se consultan solo en la sección Emuladores y no envían nada de tus juegos.
+- **Actualizaciones:** al abrir el lanzador (después de responder el aviso de la primera vez) y en la sección Emuladores se consulta qué versión hay publicada del lanzador (GitHub) y de los emuladores instalados (sus páginas oficiales). No se envía nada tuyo. La consulta al abrir se apaga en Configuración → Actualizaciones.
 
 ## Datos del lanzador
 
@@ -186,6 +229,6 @@ En Steam ve a *Juegos → Añadir un juego que no es de Steam* y elige `Lanzador
 - **Código:** `src\Lanzador.Core` es el núcleo, `src\Lanzador.App` la interfaz WPF y `src\Lanzador.Pruebas` las pruebas.
 - **Pruebas del núcleo:** `dotnet run --project src\Lanzador.Pruebas`. Trabajan sobre copias y no modifican los emuladores; agrega `-- --ia` para probar también la traducción. Leen la configuración real de `app\` junto a `Lanzador.slnx` (o de la carpeta en `LANZADOR_APP`), así que algunas comprobaciones esperan Eden y Ryujinx instalados y juegos concretos en la biblioteca: si no los tienes, fallan sin cambiar nada. Las pruebas del actualizador simulan instalaciones con carpetas `user` y `portable` falsas y descargan de un servidor falso; de internet solo consultan qué versión está publicada.
 - **Publicar:** `dotnet publish src\Lanzador.App -c Release -o app`.
-- **Paquete de una versión:** `pwsh herramientas\empaquetar.ps1` arma en `publicar\` el ZIP portable y `SHA256SUMS.txt`. Por fases (`-Fase Publicar`, firmar, `-Fase Comprimir`) es como lo hace GitHub Actions en `.github\workflows\compilar.yml`, que con un tag `v*` pide la firma a SignPath (ver `POLITICA-DE-FIRMA.md`).
+- **Paquete de una versión:** `pwsh herramientas\empaquetar.ps1` arma en `publicar\` el instalador (`instalador\LanzadorSwitch.iss`, necesita Inno Setup 6), el ZIP portable y `SHA256SUMS.txt`. Para publicarla, crea el release de GitHub con el tag `vX.Y.Z` y adjunta esos tres archivos: los lanzadores instalados lo detectan y se actualizan con el instalador. Por fases (`-Fase Publicar`, firmar, `-Fase Comprimir`) es como lo hace GitHub Actions en `.github\workflows\compilar.yml`, que con un tag `v*` pide la firma a SignPath (ver `POLITICA-DE-FIRMA.md`).
 - **Modo de prueba de la interfaz:** variables `LANZADOR_PRUEBA="Ir:Kirby,Trucos,Esperar5000,Abajo"` y `LANZADOR_CAPTURAS=<carpeta>`. Abre la app, simula esas acciones y guarda una captura tras cada una. También admite `Seccion:Emuladores` (cambiar de sección), `Intro` (repetir la intro; en modo de prueba no sale sola), `Negro:<juego>` y `QuitarNegro` (la pantalla de «abriendo juego» sin abrir ningún emulador), `Escucha` (activar la escucha de PS5 y Pro), `VentanaTrucos:<juego>` (la ventana de trucos sin abrir el emulador; guarda `ventana-trucos.png`), `TeclaTrucos` (comprueba que se puede registrar la tecla), `Aviso:<texto>` y `Error:<texto>` (mostrar un aviso) y `GuardarSonidos` (guarda cada sonido como WAV en la carpeta de capturas). Con `LANZADOR_AUDIO_LOG=<archivo>` anota cada sonido y cuándo se abre o cierra la salida de audio; el primer fallo de audio de cada sesión queda además en `datos\errores.log`. Usa `LANZADOR_DATOS` con una copia de `app\datos` para no tocar tu configuración. Si en esa copia `AvisoPrivacidadVisto` no está en `true`, el aviso de la primera vez sale también en el modo de prueba (lo responde la primera acción, p. ej. `Aceptar` para permitir las descargas).
 - **Probar el actualizador sin tocar los emuladores reales:** pon `LANZADOR_DATOS=<carpeta temporal>` con un `config.json` cuyas rutas de Eden y Citron apunten a instalaciones falsas.

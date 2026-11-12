@@ -145,7 +145,7 @@ public sealed class EmuladorVM(EmuladorConfig emulador, IFuenteActualizacion? fu
 
     public string DetalleInstalada => !Instalado ? Path.GetDirectoryName(Emulador.RutaExe) ?? "" : Instalada?.Origen ?? "";
 
-    public string TextoDisponible => SoloPagina ? "En ryujinx.app"
+    public string TextoDisponible => SoloPagina ? "En su página"
         : Fuente == null ? "—"
         : Consultando ? "Buscando…"
         : ErrorConsulta != null ? "No se pudo consultar"
@@ -156,7 +156,7 @@ public sealed class EmuladorVM(EmuladorConfig emulador, IFuenteActualizacion? fu
         get
         {
             if (SoloPagina)
-                return "Su servidor de actualizaciones no responde; se actualiza desde la página de descargas";
+                return "Se actualiza desde su página de descargas";
             if (ErrorConsulta != null)
                 return ErrorConsulta;
             if (Disponible == null)
@@ -237,6 +237,7 @@ public sealed class EmuladorVM(EmuladorConfig emulador, IFuenteActualizacion? fu
     {
         "nightly" => "Nightly",
         "estable" => "Estable",
+        "canary" => "Canary",
         _ => canal,
     };
 
@@ -274,6 +275,88 @@ public sealed class EstadoControlesVM(EmuladorConfig emulador) : Observable
     public EmuladorConfig Emulador { get; } = emulador;
     public string Texto { get; set; } = "";
     public string Nivel { get; set; } = "neutro";
+
+    public void Refrescar() => Avisar(string.Empty);
+}
+
+/// <summary>Un juego comprimido (.nsz o .xcz) en la pantalla de conversión.</summary>
+public sealed class ConversionVM(Lanzador.Core.Conversion.ArchivoComprimido archivo) : Observable
+{
+    private bool _seleccionado;
+    private double _progreso;
+    private string? _textoProgreso;
+
+    public Lanzador.Core.Conversion.ArchivoComprimido Archivo { get; set; } = archivo;
+    public bool Ocupado { get; set; }
+
+    /// <summary>En cola al convertir todos.</summary>
+    public bool EnCola { get; set; }
+
+    /// <summary>El .nsp existe y se comprobó el sha256 de todos sus NCA en esta sesión: se puede borrar el .nsz.</summary>
+    public bool Verificado { get; set; }
+
+    /// <summary>El .nsz original ya se envió a la papelera.</summary>
+    public bool Borrado { get; set; }
+    public string? Resultado { get; set; }
+    public bool ResultadoError { get; set; }
+
+    public bool Seleccionado { get => _seleccionado; set => Fijar(ref _seleccionado, value); }
+    public double Progreso { get => _progreso; set => Fijar(ref _progreso, value); }
+    public string? TextoProgreso { get => _textoProgreso; set => Fijar(ref _textoProgreso, value); }
+
+    public string Nombre => Archivo.Nombre;
+    public string Carpeta => Path.GetDirectoryName(Archivo.Ruta) ?? "";
+    public Lanzador.Core.Conversion.EstadoComprimido Estado => Archivo.Estado;
+    public bool Convertible => !Borrado && !Verificado && Estado == Lanzador.Core.Conversion.EstadoComprimido.Convertible;
+    public bool PorVerificar => !Borrado && !Verificado && Estado == Lanzador.Core.Conversion.EstadoComprimido.YaConvertido;
+    public bool PuedeBorrar => Verificado && !Borrado && !Ocupado;
+    public bool TieneResultado => Resultado != null && !Ocupado;
+
+    public string TextoTamano
+    {
+        get
+        {
+            var extension = Path.GetExtension(Archivo.Ruta).TrimStart('.').ToUpperInvariant();
+            var origen = $"{extension} {Lanzador.Core.Conversion.ConversorNsz.Tamano(Archivo.Tamano)}";
+            return Archivo.TamanoDestino is { } destino ? $"{origen}  →  NSP {Lanzador.Core.Conversion.ConversorNsz.Tamano(destino)}" : origen;
+        }
+    }
+
+    public string TextoEstado => Borrado ? "Original borrado"
+        : Ocupado ? Verificado || PorVerificar ? "Verificando…" : "Convirtiendo…"
+        : Verificado ? "Convertido y verificado"
+        : EnCola ? "En cola"
+        : ResultadoError ? "Falló"
+        : Estado switch
+        {
+            Lanzador.Core.Conversion.EstadoComprimido.Convertible => "Se puede convertir",
+            Lanzador.Core.Conversion.EstadoComprimido.YaConvertido => "Ya tiene su NSP",
+            Lanzador.Core.Conversion.EstadoComprimido.NoCompatible => "No compatible",
+            _ => "No se pudo leer",
+        };
+
+    /// <summary>Color de la etiqueta: ok, nuevo, aviso, error o neutro.</summary>
+    public string Nivel => Borrado ? "neutro"
+        : Ocupado || EnCola ? "nuevo"
+        : Verificado ? "ok"
+        : ResultadoError ? "error"
+        : Estado switch
+        {
+            Lanzador.Core.Conversion.EstadoComprimido.Convertible => "nuevo",
+            Lanzador.Core.Conversion.EstadoComprimido.YaConvertido => "aviso",
+            Lanzador.Core.Conversion.EstadoComprimido.Danado => "error",
+            _ => "neutro",
+        };
+
+    /// <summary>Lo que hace A sobre este archivo.</summary>
+    public string TextoAccion => Borrado || Ocupado || EnCola ? ""
+        : Verificado ? "Borrar el NSZ"
+        : Convertible ? "Convertir"
+        : PorVerificar ? "Verificar el NSP"
+        : "";
+
+    public bool TieneAccion => TextoAccion.Length > 0;
+    public string Detalle => TieneResultado ? Resultado! : Archivo.Detalle;
 
     public void Refrescar() => Avisar(string.Empty);
 }

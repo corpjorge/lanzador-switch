@@ -17,6 +17,15 @@ public sealed record VersionDisponible
     /// <summary>sha256 en hexadecimal minúsculo; sin él no se instala.</summary>
     public string? Sha256 { get; init; }
 
+    /// <summary>
+    /// La fuente oficial no publica sha256 (Ryubing): se instala igual, comprobando el tamaño publicado y que el
+    /// paquete traiga el ejecutable. Solo lo marca una fuente que descarga por HTTPS de su servidor oficial.
+    /// </summary>
+    public bool SinSha256Publicado { get; init; }
+
+    /// <summary>True si hay con qué comprobar la descarga: el sha256 o, en las fuentes que no lo publican, el tamaño.</summary>
+    public bool Verificable => Sha256 != null || (SinSha256Publicado && Tamano is > 0);
+
     public long? Tamano { get; init; }
     public DateTimeOffset? Fecha { get; init; }
     public string? PaginaNotas { get; init; }
@@ -27,7 +36,7 @@ public interface IFuenteActualizacion
     /// <summary>Texto corto para la pantalla, p. ej. "Eden Nightly · Windows amd64 clang PGO".</summary>
     string Descripcion { get; }
 
-    /// <summary>False si el lanzador no puede descargarla y solo abre la página (Ryujinx).</summary>
+    /// <summary>False si el lanzador no puede descargarla y solo abre la página.</summary>
     bool PermiteDescarga { get; }
 
     string PaginaDescargas { get; }
@@ -77,7 +86,7 @@ public static class FuentesActualizacion
 
     internal static async Task<JsonDocument> JsonAsync(string url, CancellationToken ct, bool github = false)
     {
-        using var peticion = new HttpRequestMessage(HttpMethod.Get, url);
+        using var peticion = Http.Peticion(url);
         if (github)
         {
             peticion.Headers.Accept.ParseAdd("application/vnd.github+json");
@@ -91,7 +100,15 @@ public static class FuentesActualizacion
         if (!respuesta.IsSuccessStatusCode)
             throw new HttpRequestException($"{new Uri(url).Host} respondió {(int)respuesta.StatusCode}.", null, respuesta.StatusCode);
         await using var flujo = await respuesta.Content.ReadAsStreamAsync(ct);
-        return await JsonDocument.ParseAsync(flujo, cancellationToken: ct);
+        try
+        {
+            return await JsonDocument.ParseAsync(flujo, cancellationToken: ct);
+        }
+        catch (JsonException)
+        {
+            // P. ej. una página de mantenimiento o de comprobación en lugar de la API.
+            throw new InvalidDataException($"{new Uri(url).Host} no respondió con la lista de versiones (puede estar en mantenimiento).");
+        }
     }
 
     private static string? Texto(JsonElement e, string propiedad) =>
@@ -296,15 +313,55 @@ public sealed class FuenteSuyu : IFuenteActualizacion
 }
 
 /// <summary>
-/// Ryubing (Ryujinx): su servidor de actualizaciones (update.ryujinx.app) no respondía al crear el lanzador,
-/// así que no se descarga desde aquí; solo se abre su página de descargas.
+/// Ryubing (Ryujinx) Canary: releases de git.ryujinx.app/Ryubing/Canary (API de Forgejo, igual a la de Gitea),
+/// archivo <c>ryujinx-canary-&lt;versión&gt;-win_x64.zip</c>. Ryubing no publica el sha256 de sus archivos, así que
+/// la descarga se comprueba por HTTPS, por el tamaño publicado y por su contenido.
 /// </summary>
 public sealed class FuenteRyujinx : IFuenteActualizacion
 {
-    public string Descripcion => "Ryubing · página de descargas";
-    public bool PermiteDescarga => false;
-    public string PaginaDescargas => "https://ryujinx.app/download";
+    public const string UrlReleases = "https://git.ryujinx.app/api/v1/repos/Ryubing/Canary/releases?limit=10";
+    public const string SufijoWindows = "-win_x64.zip";
 
-    public Task<VersionDisponible> ConsultarAsync(CancellationToken ct) =>
-        throw new NotSupportedException("Ryujinx se actualiza desde su página de descargas.");
+    public string Descripcion => "Ryubing Canary · Windows x64";
+    public bool PermiteDescarga => true;
+    public string PaginaDescargas => "https://git.ryujinx.app/Ryubing/Canary/releases";
+
+    public async Task<VersionDisponible> ConsultarAsync(CancellationToken ct)
+    {
+        using var lista = await FuentesActualizacion.JsonAsync(UrlReleases, ct);
+        return Interpretar(lista.RootElement);
+    }
+
+    /// <summary>El release más reciente (no borrador) que ya tenga el zip de Windows x64.</summary>
+    public static VersionDisponible Interpretar(JsonElement lista)
+    {
+        if (lista.ValueKind != JsonValueKind.Array)
+            throw new InvalidDataException("La API de git.ryujinx.app respondió algo inesperado.");
+        foreach (var release in lista.EnumerateArray())
+        {
+            if (release.TryGetProperty("draft", out var d) && d.ValueKind == JsonValueKind.True)
+                continue;
+            var (tag, nombre, pagina, fecha, archivos) = FuentesActualizacion.LeerRelease(release);
+            var archivo = archivos.FirstOrDefault(a => a.Nombre.StartsWith("ryujinx-", StringComparison.OrdinalIgnoreCase)
+                                                       && a.Nombre.EndsWith(SufijoWindows, StringComparison.OrdinalIgnoreCase));
+            if (archivo == null || archivo.Tamano == null)
+                continue; // recién publicado: todavía se están subiendo los archivos
+            return new VersionDisponible
+            {
+                Version = tag.TrimStart('v', 'V'),
+                Titulo = nombre,
+                Canal = "canary",
+                Archivo = archivo.Nombre,
+                Url = archivo.Url,
+                Sha256 = archivo.Sha256,
+                // Sin sha256 publicado solo se acepta de su servidor oficial, por HTTPS y con el tamaño exacto.
+                SinSha256Publicado = archivo.Sha256 == null && Uri.TryCreate(archivo.Url, UriKind.Absolute, out var uri)
+                                     && uri.Scheme == Uri.UriSchemeHttps && uri.Host.Equals("git.ryujinx.app", StringComparison.OrdinalIgnoreCase),
+                Tamano = archivo.Tamano,
+                Fecha = fecha,
+                PaginaNotas = pagina,
+            };
+        }
+        throw new InvalidDataException("Ryubing Canary no tiene una versión para Windows x64 publicada.");
+    }
 }

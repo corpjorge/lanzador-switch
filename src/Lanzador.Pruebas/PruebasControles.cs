@@ -46,6 +46,25 @@ static class PruebasControles
         Comprobar(Controles.NombreMando("030000005e040000200b000023057801") == "Mando Xbox Series", "045e:0b20 = Mando Xbox Series");
         Comprobar(Controles.NombreMando("050000007e0500000920000000006806") == "Switch Pro Controller", "057e:2009 = Switch Pro Controller");
 
+        Console.WriteLine("\n== Controles: reparto automático de los mandos encendidos");
+        const string xbox = "030000005e040000200b000023057801", dualsense = "050000004c050000e60c000000006800", pro = "050000007e0500000920000000006806";
+        MandoConectado Encendido(string guid, int puerto = 0) => new(1, guid, puerto, "SDL", 0, 0, null);
+        AsignacionJugador Elegido(int jugador, string guid, string tipo = "Pro Controller", int puerto = 0) => new() { Jugador = jugador, Guid = guid, Puerto = puerto, Tipo = tipo, Nombre = Controles.NombreMando(guid) };
+        string Reparto(List<AsignacionJugador> lista) => string.Join(",", lista.Select(j => $"{j.Jugador}:{Controles.NombreMando(j.Guid)}/{j.Puerto}/{j.Tipo}"));
+        var elegidos = new List<AsignacionJugador> { Elegido(1, xbox), Elegido(2, dualsense), Elegido(3, pro, "Joy-Con dobles") };
+        Comprobar(Reparto(MandosAutomaticos.Repartir(elegidos, [Encendido(dualsense)])) == "1:DualSense/0/Pro Controller",
+            "Solo está encendido el mando del jugador 2: pasa a ser el jugador 1");
+        Comprobar(Reparto(MandosAutomaticos.Repartir(elegidos, [Encendido(pro), Encendido(xbox)])) == "1:Mando Xbox Series/0/Pro Controller,2:Switch Pro Controller/0/Joy-Con dobles",
+            "Varios encendidos: se respeta el orden elegido en Controles, sin huecos, y el tipo de cada uno");
+        Comprobar(Reparto(MandosAutomaticos.Repartir(elegidos, [Encendido(xbox), Encendido(xbox, 1)])) == "1:Mando Xbox Series/0/Pro Controller,2:Mando Xbox Series/1/Pro Controller",
+            "Un mando que no se había elegido (el segundo igual) entra después de los elegidos");
+        Comprobar(Reparto(MandosAutomaticos.Repartir([], [Encendido(dualsense), Encendido(xbox)])) == "1:DualSense/0/Pro Controller,2:Mando Xbox Series/0/Pro Controller",
+            "Sin nada elegido: los encendidos en el orden del sistema");
+        Comprobar(MandosAutomaticos.Repartir(elegidos, []).Count == 0, "Sin mandos encendidos no se reparte nada (no se toca el emulador)");
+        Comprobar(Reparto(MandosAutomaticos.Repartir([Elegido(1, xbox, "Portátil"), Elegido(2, dualsense, "Portátil")], [Encendido(dualsense), Encendido(xbox)]))
+                  == "1:Mando Xbox Series/0/Portátil,2:DualSense/0/Pro Controller", "«Portátil» solo se conserva en el jugador 1");
+        Comprobar(MandosAutomaticos.Repartir([Elegido(1, xbox), Elegido(2, xbox)], [Encendido(xbox)]).Count == 1, "El mismo mando en dos jugadores cuenta una vez");
+
         Console.WriteLine("\n== Controles: mandos conectados (SDL3)");
         var conectados = Sdl3.Mandos();
         Console.WriteLine(Sdl3.Disponible ? $"  {conectados.Count} mando(s)" : $"  SDL3 no disponible: {Sdl3.Error}");

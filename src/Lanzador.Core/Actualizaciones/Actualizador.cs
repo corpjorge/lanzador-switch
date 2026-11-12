@@ -109,7 +109,7 @@ public sealed class Actualizador(HttpClient? cliente = null)
     {
         if (version.Url == null)
             return new(false, "Esta fuente no tiene un archivo para descargar.");
-        if (version.Sha256 == null)
+        if (!version.Verificable)
             return new(false, "La fuente no publica el sha256 del archivo; no se instala sin poder verificarlo.");
         if (Bloqueo(emulador) is { } motivo)
             return new(false, motivo);
@@ -127,8 +127,8 @@ public sealed class Actualizador(HttpClient? cliente = null)
             // 1. Descarga y verificación.
             var zip = Path.Combine(trabajo, "descarga.zip");
             var hash = await DescargarAsync(version.Url, zip, version.Tamano, progreso, ct);
-            progreso?.Report(new(EtapaActualizacion.Verificando, 1, "Verificando el sha256…"));
-            if (!hash.Equals(version.Sha256, StringComparison.OrdinalIgnoreCase))
+            progreso?.Report(new(EtapaActualizacion.Verificando, 1, version.Sha256 != null ? "Verificando el sha256…" : "Verificando la descarga…"));
+            if (version.Sha256 != null && !hash.Equals(version.Sha256, StringComparison.OrdinalIgnoreCase))
                 return new(false, $"El archivo descargado no coincide con el sha256 publicado (esperado {version.Sha256[..12]}…, llegó {hash[..12]}…). No se instaló nada.");
             if (version.Tamano is { } esperado && new FileInfo(zip).Length != esperado)
                 return new(false, "El archivo descargado no tiene el tamaño publicado. No se instaló nada.");
@@ -416,6 +416,10 @@ public sealed class Actualizador(HttpClient? cliente = null)
         return raiz;
     }
 
+    /// <summary>Descarga un archivo con progreso y devuelve su sha256 (lo usa también la actualización del lanzador).</summary>
+    public Task<string> DescargarArchivoAsync(string url, string destino, long? tamanoEsperado, IProgress<ProgresoActualizacion>? progreso, CancellationToken ct) =>
+        DescargarAsync(url, destino, tamanoEsperado, progreso, ct);
+
     private async Task<string> DescargarAsync(string url, string destino, long? tamanoEsperado, IProgress<ProgresoActualizacion>? progreso, CancellationToken ct)
     {
         using var vigilancia = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -423,7 +427,8 @@ public sealed class Actualizador(HttpClient? cliente = null)
         HttpResponseMessage respuesta;
         try
         {
-            respuesta = await _cliente.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, vigilancia.Token);
+            using var peticion = Http.Peticion(url);
+            respuesta = await _cliente.SendAsync(peticion, HttpCompletionOption.ResponseHeadersRead, vigilancia.Token);
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {

@@ -109,6 +109,12 @@ public sealed class Configuracion
     /// <summary>Mando de cada jugador elegido en el lanzador; se escribe en todos los emuladores.</summary>
     public List<AsignacionJugador> Jugadores { get; set; } = new();
 
+    /// <summary>
+    /// Al abrir un juego, repartir los mandos encendidos entre los primeros jugadores (los elegidos en Controles
+    /// primero, en su orden) y escribirlos en el emulador que se abre.
+    /// </summary>
+    public bool MandosAutomaticos { get; set; } = true;
+
     /// <summary>Mandos que el lanzador ya vio (o que tenía algún emulador): se pueden elegir aunque estén apagados.</summary>
     public List<MandoConocido> MandosConocidos { get; set; } = new();
 
@@ -178,6 +184,9 @@ public sealed class OpcionesActualizacion
 
     /// <summary>"clang-cl" o "clangtron".</summary>
     public string VarianteCitron { get; set; } = "clang-cl";
+
+    /// <summary>Al abrir el lanzador, buscar versiones nuevas del lanzador y de los emuladores instalados, y avisar.</summary>
+    public bool BuscarAlIniciar { get; set; } = true;
 }
 
 public sealed record ArchivoActualizacion(string Ruta, int? Version, string? VersionTexto);

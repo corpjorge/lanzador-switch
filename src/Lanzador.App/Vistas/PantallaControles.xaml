@@ -13,6 +13,7 @@
             <StackPanel>
                 <TextBlock Style="{StaticResource caption}" Margin="0,4,0,0" TextWrapping="Wrap" TextTrimming="None"
                            Text="Elige el mando de cada jugador aquí mismo. Al aplicar (X), el lanzador escribe la configuración en Eden, Citron, Suyu y Ryujinx, con la asignación de botones que pondría cada emulador y un respaldo de lo anterior."/>
+                <TextBlock x:Name="TextoAutomatico" Style="{StaticResource caption}" Margin="0,6,0,0" TextWrapping="Wrap" TextTrimming="None"/>
             </StackPanel>
 
             <Border Grid.Row="1" Style="{StaticResource Chip}" Margin="0,10,0,0" HorizontalAlignment="Left" Background="{StaticResource accent-soft}">

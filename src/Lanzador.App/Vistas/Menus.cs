@@ -101,6 +101,9 @@ public static class Menus
             new("Configuración", "Emuladores, carpetas de juegos e IA para traducir", () => ventana.Mostrar(new PantallaConfiguracion())),
             new("Emuladores", "Versiones, actualizaciones, claves y firmware de Eden, Ryujinx, Citron Neo y Suyu", () => ventana.IrASeccion(Seccion.Emuladores)),
             new("Controles", "Configura los mandos una vez y cópialos a todos los emuladores", () => ventana.IrASeccion(Seccion.Controles)),
+            new("Convertir juegos NSZ a NSP", "Descomprime tus juegos .nsz, los verifica y te deja borrar el original", () => ventana.Mostrar(new PantallaConversion())),
+            new("Buscar actualizaciones", $"Del lanzador (tienes la {Lanzador.Core.Actualizaciones.ActualizacionLanzador.VersionActual.ToString(3)}) y de los emuladores instalados",
+                () => _ = ventana.BuscarActualizacionesAsync(true)),
             new("Volver a buscar juegos", "Lee otra vez las carpetas de juegos", () => _ = Catalogo.CargarAsync(false)),
             new("Actualizar compatibilidad", "Descarga de nuevo las listas de Ryubing y Citron", () => _ = Catalogo.CargarAsync(true)),
             new(ventana.EnPantallaCompleta ? "Usar ventana" : "Usar pantalla completa", "También con F11", () =>

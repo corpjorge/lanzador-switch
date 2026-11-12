@@ -10,7 +10,11 @@ Lanzador Switch se distribuye con la licencia MIT (ver [LICENSE](LICENSE)). Incl
 | [Sora](https://github.com/sora-xor/sora-font) | 600, 700 | SIL Open Font License 1.1 | dentro de `Lanzador.exe`; licencia en `Fuentes/OFL-Sora.txt` |
 | [Lexend](https://github.com/googlefonts/lexend) | 400, 500, 600, 700 | SIL Open Font License 1.1 | dentro de `Lanzador.exe`; licencia en `Fuentes/OFL-Lexend.txt` |
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | 500 | SIL Open Font License 1.1 | dentro de `Lanzador.exe`; licencia en `Fuentes/OFL-JetBrainsMono.txt` |
+| [ZstdSharp](https://github.com/oleg-st/ZstdSharp) (port a C# de Zstandard) | 0.8.8 | MIT (Zstandard: BSD de 3 cláusulas, Meta Platforms) | dentro de `Lanzador.exe`; descomprime los juegos `.nsz` |
 | [.NET](https://github.com/dotnet/runtime) y [WPF](https://github.com/dotnet/wpf) | 10 | MIT, con sus propios avisos de terceros | dentro de `Lanzador.exe` (versión autocontenida) |
+| [Inno Setup](https://jrsoftware.org/isinfo.php) | 6 | Licencia de Inno Setup (Jordan Russell, Martijn Laan) | el programa de instalación y desinstalación (`…-instalador.exe`, `unins000.exe`) |
+
+El conversor de NSZ a NSP está escrito para este proyecto a partir del formato que documenta [nsz](https://github.com/nicoboss/nsz) (MIT); no incluye código suyo.
 
 ### SDL3 — licencia zlib
 
@@ -49,7 +53,8 @@ No se redistribuyen: el lanzador los descarga en tu equipo cuando hace falta, y 
 - Trucos: [switch-cheats-db](https://github.com/HamletDuFromage/switch-cheats-db) y tinfoil.io.
 - Carátulas y fondos: tinfoil.media. Las carátulas de los juegos son de sus dueños.
 - Compatibilidad: [Ryubing/Compatibility](https://github.com/Ryubing/Compatibility), [Citron-Compatability](https://github.com/citron-neo/Citron-Compatability) y la lista archivada de [yuzu-mirror/api](https://github.com/yuzu-mirror/api).
-- Actualizaciones de emuladores: las páginas oficiales de Eden, Citron Neo, Suyu y Ryujinx (Ryubing).
+- Actualizaciones de emuladores: las páginas oficiales de Eden, Citron Neo, Suyu y Ryujinx (Ryubing Canary, `git.ryujinx.app`).
+- Actualizaciones del lanzador: los releases de este proyecto en GitHub.
 
 ## Marcas
 

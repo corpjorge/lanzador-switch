@@ -1,4 +1,4 @@
-# Compila y empaqueta el lanzador desde este repositorio: ZIP portable autocontenido y SHA256SUMS.txt.
+# Compila y empaqueta el lanzador desde este repositorio: instalador, ZIP portable autocontenido y SHA256SUMS.txt.
 # Con un tag v* (o a mano con «firmar») pide la firma de Lanzador.exe a SignPath, que la aprueba un approver.
 # No publica nada: el paquete queda como artefacto del workflow y el release se crea a mano.
 # Política de firma: POLITICA-DE-FIRMA.md
@@ -79,14 +79,21 @@ jobs:
           $firma = Get-AuthenticodeSignature publicar/Lanzador/Lanzador.exe
           if ($firma.Status -ne 'Valid') { throw "La firma de Lanzador.exe no es válida: $($firma.Status) $($firma.StatusMessage)" }
 
-      - name: Armar el ZIP y SHA256SUMS.txt
-        run: ./herramientas/empaquetar.ps1 -Fase Comprimir
+      - name: Instalar Inno Setup (si la imagen no lo trae)
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup --no-progress -y }
+
+      # El instalador lleva dentro el Lanzador.exe ya firmado; el instalador en sí no se firma todavía
+      # (.signpath/artifact-configuration.xml solo cubre Lanzador.exe).
+      - name: Armar el instalador, el ZIP y SHA256SUMS.txt
+        run: ./herramientas/empaquetar.ps1 -Fase Comprimir -InstaladorObligatorio
 
       - name: Subir el paquete
         uses: actions/upload-artifact@v7
         with:
           name: ${{ steps.paquete.outputs.nombre }}
           path: |
+            publicar/*-instalador.exe
             publicar/*.zip
             publicar/SHA256SUMS.txt
           if-no-files-found: error
@@ -101,5 +108,8 @@ jobs:
             ''
             "- Commit: ``${{ github.sha }}``"
             "- Lanzador.exe: $estado"
-            "- SHA256SUMS.txt: ``$((Get-Content publicar/SHA256SUMS.txt -Raw).Trim())``"
+            '- SHA256SUMS.txt:'
+            (Get-Content publicar/SHA256SUMS.txt | Where-Object { $_ } | ForEach-Object { "  - ``$_``" })
+            ''
+            'Para publicar la versión: crea el release con el tag y adjunta el instalador, el ZIP y SHA256SUMS.txt. El lanzador detecta el release nuevo y se actualiza con el instalador.'
           ) | Add-Content $env:GITHUB_STEP_SUMMARY

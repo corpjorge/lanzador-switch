@@ -88,21 +88,41 @@ static class PruebasActualizador
         Comprobar(FuentesActualizacion.Para(eden, opciones) is FuenteEdenNightly
                   && FuentesActualizacion.Para(eden, new OpcionesActualizacion { CanalEden = "estable" }) is FuenteEdenEstable
                   && FuentesActualizacion.Para(new EmuladorConfig { Id = "citron" }, new OpcionesActualizacion { VarianteCitron = "clangtron" }) is FuenteCitronNeo { Variante: "clangtron" }
-                  && FuentesActualizacion.Para(new EmuladorConfig { Id = "ryujinx" }, opciones) is { PermiteDescarga: false },
-            "Cada emulador usa la fuente y el canal de la configuración (Ryujinx solo abre la página)");
+                  && FuentesActualizacion.Para(new EmuladorConfig { Id = "ryujinx" }, opciones) is FuenteRyujinx { PermiteDescarga: true },
+            "Cada emulador usa la fuente y el canal de la configuración (Ryujinx: Ryubing Canary)");
+
+        var canary = JsonDocument.Parse("""
+            [{"tag_name":"1.3.354","name":"Canary 1.3.354","draft":false,"prerelease":false,"html_url":"https://git.ryujinx.app/Ryubing/Canary/releases/tag/1.3.354","assets":[
+               {"name":"ryujinx-canary-1.3.354-linux_x64.tar.gz","size":36604148,"browser_download_url":"https://git.ryujinx.app/Ryubing/Canary/releases/download/1.3.354/ryujinx-canary-1.3.354-linux_x64.tar.gz"}]},
+             {"tag_name":"1.3.353","name":"Canary 1.3.353","draft":false,"prerelease":false,"published_at":"2026-11-11T00:42:27Z","html_url":"https://git.ryujinx.app/Ryubing/Canary/releases/tag/1.3.353","assets":[
+               {"name":"ryujinx-canary-1.3.353-win_arm64.zip","size":36699216,"browser_download_url":"https://git.ryujinx.app/Ryubing/Canary/releases/download/1.3.353/ryujinx-canary-1.3.353-win_arm64.zip"},
+               {"name":"ryujinx-canary-1.3.353-win_x64.7z","size":28129889,"browser_download_url":"https://git.ryujinx.app/Ryubing/Canary/releases/download/1.3.353/ryujinx-canary-1.3.353-win_x64.7z"},
+               {"name":"ryujinx-canary-1.3.353-win_x64.zip","size":37833945,"browser_download_url":"https://git.ryujinx.app/Ryubing/Canary/releases/download/1.3.353/ryujinx-canary-1.3.353-win_x64.zip"},
+               {"name":"Source Code (ZIP)","size":0,"browser_download_url":"https://git.ryujinx.app/projects/Ryubing/archive/Canary-1.3.353.zip"}]}]
+            """);
+        var r = FuenteRyujinx.Interpretar(canary.RootElement);
+        Comprobar(r.Version == "1.3.353" && r.Archivo == "ryujinx-canary-1.3.353-win_x64.zip" && r.Tamano == 37833945 && r.Canal == "canary",
+            "Ryubing Canary: el zip win_x64 del release más reciente que ya lo tiene (no arm64, 7z ni el código fuente)");
+        Comprobar(r.Sha256 == null && r.SinSha256Publicado && r.Verificable, "Ryubing Canary: sin sha256 publicado, se comprueba por tamaño");
+        Comprobar(VersionesInstaladas.MismaVersion("1.3.353", r.Version) && !VersionesInstaladas.MismaVersion("1.3.351", r.Version), "Ryubing Canary: compara con la versión de Ryujinx.exe");
+        var ajeno = JsonDocument.Parse("""
+            [{"tag_name":"9.9.9","name":"x","assets":[{"name":"ryujinx-canary-9.9.9-win_x64.zip","size":10,"browser_download_url":"http://otro.example/ryujinx-canary-9.9.9-win_x64.zip"}]}]
+            """);
+        Comprobar(!FuenteRyujinx.Interpretar(ajeno.RootElement).Verificable, "Ryubing Canary: un archivo sin sha256 que no viene de git.ryujinx.app por HTTPS no se instala");
     }
 
     private static async Task FuentesRealesAsync()
     {
         Console.WriteLine("\n== Actualizador: versiones publicadas (solo consulta)");
-        IFuenteActualizacion[] fuentes = [new FuenteEdenNightly(), new FuenteEdenEstable(), new FuenteCitronNeo("clang-cl"), new FuenteCitronNeo("clangtron"), new FuenteSuyu()];
+        IFuenteActualizacion[] fuentes = [new FuenteEdenNightly(), new FuenteEdenEstable(), new FuenteCitronNeo("clang-cl"), new FuenteCitronNeo("clangtron"), new FuenteSuyu(), new FuenteRyujinx()];
         foreach (var fuente in fuentes)
         {
             try
             {
                 var v = await fuente.ConsultarAsync(CancellationToken.None);
                 Console.WriteLine($"  {fuente.Descripcion}: {v.Version} | {v.Archivo} | {v.Tamano / 1048576.0:0.0} MB | sha256 {v.Sha256?[..12]}…");
-                Comprobar(v.Url != null && v.Sha256 != null, $"{fuente.Descripcion}: tiene archivo y sha256");
+                Comprobar(v.Url != null && v.Verificable && (v.Sha256 != null || fuente is FuenteRyujinx),
+                    $"{fuente.Descripcion}: tiene archivo y {(v.Sha256 != null ? "sha256" : "tamaño para comprobarlo")}");
             }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidDataException or JsonException)
             {
@@ -242,6 +262,16 @@ static class PruebasActualizador
         var atras = Actualizador.VolverAnterior(emu, null);
         Comprobar(atras.Exito && Leer(carpeta, "Ryujinx.exe") == "ryujinx viejo" && Iguales(portable, Foto(Path.Combine(carpeta, "portable"))),
             "Volver atrás repone Ryujinx.exe y no toca portable");
+
+        // Ryubing no publica sha256: se instala comprobando el tamaño publicado, y sin ninguno de los dos no se instala.
+        var actualizador = new Actualizador(new HttpClient(servidor)) { CarpetaTemporal = Path.Combine(raiz, "descargas") };
+        var canary = new VersionDisponible { Version = "1.3.401", Canal = "canary", Url = "https://prueba.local/ryujinx.zip", SinSha256Publicado = true };
+        var sinNada = await actualizador.ActualizarAsync(emu, canary, null, CancellationToken.None);
+        var otroTamano = await actualizador.ActualizarAsync(emu, canary with { Tamano = zip.Length + 1 }, null, CancellationToken.None);
+        Comprobar(!sinNada.Exito && !otroTamano.Exito && Leer(carpeta, "Ryujinx.exe") == "ryujinx viejo", "Sin sha256 ni tamaño, o con otro tamaño, no se instala");
+        var porTamano = await actualizador.ActualizarAsync(emu, canary with { Tamano = zip.Length }, null, CancellationToken.None);
+        Comprobar(porTamano.Exito && Leer(carpeta, "Ryujinx.exe") == "ryujinx nuevo" && Iguales(portable, Foto(Path.Combine(carpeta, "portable"))),
+            $"Sin sha256 publicado se instala comprobando el tamaño: {porTamano.Mensaje}");
     }
 
     private static async Task InstalacionCitronAsync(string raiz)

@@ -15,7 +15,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 1. Se sube `<Version>` en `src/Lanzador.App/Lanzador.App.csproj`, se hace commit en `main` y se crea el tag `vX.Y.Z`.
 2. El workflow compila desde ese tag y envía la carpeta del lanzador a SignPath.
 3. Un aprobador revisa y **aprueba a mano** la solicitud en SignPath. Ninguna versión se firma sin esa aprobación.
-4. El workflow comprueba la firma y arma `LanzadorSwitch-X.Y.Z-win-x64.zip` y `SHA256SUMS.txt` con el ejecutable firmado.
+4. El workflow comprueba la firma y arma `LanzadorSwitch-X.Y.Z-win-x64-instalador.exe`, `LanzadorSwitch-X.Y.Z-win-x64.zip` y `SHA256SUMS.txt` con el ejecutable firmado. El instalador (hecho con Inno Setup) lleva dentro ese `Lanzador.exe`; el instalador en sí todavía no se firma.
 5. El release se publica con esos archivos, sin cambiarlos.
 
 ## Equipo y roles
@@ -32,7 +32,7 @@ Quién puede escribir en el repositorio: [colaboradores de corpjorge/lanzador-sw
 
 Lanzador Switch **no tiene telemetría, cuentas ni analítica**. No envía tu configuración, tus partidas, tus claves ni tus archivos a ningún sitio. Lo que guarda queda en la carpeta `datos`, junto a `Lanzador.exe`.
 
-**La primera vez que lo abres te pregunta** si permites descargar carátulas, trucos y listas de compatibilidad, con enlace a esta sección. Hasta que respondes no descarga nada; si cierras el aviso sin elegir, vuelve a salir la próxima vez.
+**La primera vez que lo abres te pregunta** si permites descargar carátulas, trucos y listas de compatibilidad, con enlace a esta sección. Hasta que respondes no descarga ni consulta nada; si cierras el aviso sin elegir, vuelve a salir la próxima vez.
 
 Estos son los servicios a los que puede conectarse. Cada petición lleva, como cualquier conexión, tu dirección IP y el agente `LanzadorSwitch/1.0`.
 
@@ -43,7 +43,8 @@ Estos son los servicios a los que puede conectarse. Cada petición lleva, como c
 | raw.githubusercontent.com: [switch-cheats-db](https://github.com/HamletDuFromage/switch-cheats-db) | Trucos | El Title ID del juego | Al abrir sus trucos; caché de 3 días | Descargas |
 | raw.githubusercontent.com: listas de [Ryubing](https://github.com/Ryubing/Compatibility), [Citron Neo](https://github.com/citron-neo/Citron-Compatability) y [yuzu](https://github.com/yuzu-mirror/api) | Compatibilidad | Ninguno: se descarga la lista completa | Ryubing cada semana, Citron cada día, yuzu una vez | Descargas |
 | Anthropic (Claude Code) u OpenAI (Codex), con la herramienta y la cuenta que tengas instaladas | Traducir al español los nombres de los trucos | El nombre del juego y los nombres de sus trucos (nunca el código del truco) | Al abrir trucos sin traducir, **solo si elegiste un motor de IA** | Viene desactivado: motor «Ninguno» |
-| nightly.eden-emu.dev, stable.eden-emu.dev, git.eden-emu.dev, api.github.com y github.com (Citron Neo, Suyu) | Ver y descargar versiones de los emuladores | Ninguno | Al abrir la sección Emuladores; solo descarga cuando confirmas una instalación o actualización | No abrir la sección Emuladores |
+| nightly.eden-emu.dev, stable.eden-emu.dev, git.eden-emu.dev, git.ryujinx.app (Ryubing), api.github.com y github.com (Citron Neo, Suyu) | Ver y descargar versiones de los emuladores | Ninguno | Al abrir el lanzador, solo de los emuladores instalados, y al abrir la sección Emuladores; solo descarga cuando confirmas una instalación o actualización | Configuración → Actualizaciones (la consulta al abrir) y no abrir la sección Emuladores |
+| api.github.com y github.com: [releases de este proyecto](https://github.com/corpjorge/lanzador-switch/releases) | Saber si hay una versión nueva del lanzador y descargar su instalador | Ninguno | Al abrir el lanzador y en ☰ → Buscar actualizaciones; solo descarga cuando confirmas la actualización | Configuración → Actualizaciones |
 
 - **Descargas:** ☰ → Configuración → Internet → «Descargar carátulas, fondos, trucos y listas de compatibilidad». Desactivado, el lanzador usa solo lo que ya se descargó y no envía el identificador de tus juegos a nadie.
 - **Firma:** si activas su integración, el lanzador inicia el agente instalado aparte y consulta sus resultados por un canal local de Windows. Firma accede a su catálogo y a los servidores de descarga. Se desactiva en **Configuración → Claves y firmware → Usar Firma**.
@@ -57,4 +58,4 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 - **What is signed:** only `Lanzador.exe`, built from this repository by the GitHub Actions workflow `.github/workflows/compilar.yml`. Third-party binaries (`SDL3.dll`) are shipped unsigned, as published upstream.
 - **Process:** every release is built from a `vX.Y.Z` tag, submitted to SignPath and manually approved by an approver before signing.
 - **Team:** committer, reviewer and approver: [corpjorge](https://github.com/corpjorge). All members use multi-factor authentication on GitHub and SignPath.
-- **Privacy:** no telemetry, accounts or analytics. On first launch the program asks whether it may download cover art, cheats and compatibility lists, links to this policy, and downloads nothing until the user answers. If allowed, it contacts tinfoil.media and tinfoil.io (sends the game's Title ID) and raw.githubusercontent.com (cheat database and compatibility lists); this can be turned off at any time in Settings → Internet. AI translation is off by default; only if the user selects an engine are game and cheat names sent to Anthropic or OpenAI through the user's own CLI. The emulators' release servers are contacted only from the Emulators section and receive no user data.
+- **Privacy:** no telemetry, accounts or analytics. On first launch the program asks whether it may download cover art, cheats and compatibility lists, links to this policy, and downloads nothing until the user answers. If allowed, it contacts tinfoil.media and tinfoil.io (sends the game's Title ID) and raw.githubusercontent.com (cheat database and compatibility lists); this can be turned off at any time in Settings → Internet. AI translation is off by default; only if the user selects an engine are game and cheat names sent to Anthropic or OpenAI through the user's own CLI. On startup (after the first-launch prompt is answered) and from the Emulators section, the program checks the latest published version of itself (GitHub releases of this project) and of the installed emulators (their official release servers); these requests carry no user data, nothing is downloaded or installed without confirmation, and the startup check can be turned off in Settings → Updates.

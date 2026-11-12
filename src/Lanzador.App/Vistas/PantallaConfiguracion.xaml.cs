@@ -34,6 +34,7 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         CampoModelo.Text = _copia.ModeloIA;
         CasillaPantallaCompleta.IsChecked = _copia.PantallaCompleta;
         CasillaContenidoEnLinea.IsChecked = _copia.ContenidoEnLinea;
+        CasillaBuscarActualizaciones.IsChecked = _copia.Actualizaciones.BuscarAlIniciar;
         Elegir(ComboCanalEden, _copia.Actualizaciones.CanalEden);
         Elegir(ComboVarianteCitron, _copia.Actualizaciones.VarianteCitron);
         CampoClaves.Text = _copia.ClavesFirmware.Carpeta;
@@ -231,6 +232,7 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         _copia.ReducirMovimiento = CasillaReducirMovimiento.IsChecked == true;
         _copia.MostrarIntro = CasillaIntro.IsChecked == true;
         _copia.TeclaTrucos = ComboTeclaTrucos.SelectedItem is ComboBoxItem { Tag: string teclaTrucos } ? teclaTrucos : "F7";
+        _copia.Actualizaciones.BuscarAlIniciar = CasillaBuscarActualizaciones.IsChecked == true;
         _copia.Actualizaciones.CanalEden = Elegida(ComboCanalEden);
         _copia.Actualizaciones.VarianteCitron = Elegida(ComboVarianteCitron);
         foreach (var emulador in _copia.Emuladores)

@@ -49,6 +49,22 @@ public static class Http
     }
 
     /// <summary>
+    /// Una petición GET. A git.ryujinx.app (Ryubing) el lanzador se presenta con su propio nombre, sin la parte de
+    /// navegador: su servidor responde a los programas con la API y a los navegadores con una página de comprobación.
+    /// </summary>
+    public static HttpRequestMessage Peticion(string url)
+    {
+        var peticion = new HttpRequestMessage(HttpMethod.Get, url);
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Host.Equals("git.ryujinx.app", StringComparison.OrdinalIgnoreCase))
+        {
+            peticion.Headers.UserAgent.Clear();
+            peticion.Headers.UserAgent.ParseAdd("LanzadorSwitch/1.0");
+            peticion.Headers.Accept.ParseAdd("application/json, application/octet-stream, */*");
+        }
+        return peticion;
+    }
+
+    /// <summary>
     /// Descarga un texto y lo guarda en caché. Devuelve "" si el servidor responde 404.
     /// Sin internet, usa la copia guardada aunque esté vencida; con las descargas desactivadas, también.
     /// </summary>

@@ -110,6 +110,9 @@ public partial class MainWindow : Window
                 MostrarIntro();
             if (!Estado.Config.AvisoPrivacidadVisto)
                 MostrarAvisoPrivacidad();
+            // La primera vez no se consulta nada hasta responder el aviso de conexiones; en las pruebas con capturas, tampoco.
+            else if (Estado.Config.Actualizaciones.BuscarAlIniciar && Environment.GetEnvironmentVariable("LANZADOR_PRUEBA") == null)
+                _ = BuscarActualizacionesAsync(false);
         };
         Closing += (_, e) =>
         {
@@ -497,6 +500,8 @@ public partial class MainWindow : Window
         TextoTeclaTrucos.Visibility = tecla != null ? Visibility.Visible : Visibility.Collapsed;
         TextoAbriendo.Text = juego.Nombre;
         TextoAbriendoCon.Text = $"Abriendo con {emulador.Nombre}…";
+        if (await RepartirMandosAsync(emulador) is { } mandos)
+            TextoAbriendoCon.Text += $"\n{mandos}";
         AyudaVolver.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(ReducirMovimiento ? 0 : 300))
         {
             BeginTime = TimeSpan.FromMilliseconds(ReducirMovimiento ? 0 : 200),
@@ -536,6 +541,42 @@ public partial class MainWindow : Window
         }
         if (Estado.Config.PreferenciasDe(juego.Juego.Clave).CalificacionDe(emulador.Id) == Calificacion.SinProbar)
             AbrirMenu(Menus.Calificar(juego, emulador, $"¿Cómo funcionó en {emulador.Nombre}?"));
+    }
+
+    /// <summary>
+    /// Mandos automáticos: antes de abrir el juego, los mandos encendidos pasan a ser los primeros jugadores en ese
+    /// emulador (ver <see cref="Lanzador.Core.Controles.MandosAutomaticos"/>). Devuelve el reparto para mostrarlo, o
+    /// null si no se cambió nada (desactivado, sin mandos encendidos, el emulador ya los tenía así o está abierto).
+    /// </summary>
+    private async Task<string?> RepartirMandosAsync(EmuladorConfig emulador)
+    {
+        if (!Estado.Config.MandosAutomaticos || Environment.GetEnvironmentVariable("LANZADOR_PRUEBA") != null)
+            return null;
+        try
+        {
+            // SDL se usa siempre desde el hilo de la interfaz.
+            var conectados = Lanzador.Core.Controles.Sdl3.Mandos();
+            var reparto = Lanzador.Core.Controles.MandosAutomaticos.Repartir(Estado.Config.Jugadores, conectados);
+            if (reparto.Count == 0)
+                return null;
+            var todos = Estado.Config.Emuladores.ToList();
+            var resultado = await Task.Run(() => Actualizador.EmuladorAbierto(emulador) != null
+                ? null // ya está abierto: no se le cambia la configuración por debajo
+                : Lanzador.Core.Controles.GeneradorControles.Aplicar(emulador, reparto, todos));
+            if (resultado == null)
+                return null;
+            if (!resultado.Exito)
+            {
+                Aviso($"No se pudieron repartir los mandos: {resultado.Mensaje}", true);
+                return null;
+            }
+            return resultado.Cambio ? $"Mandos: {Lanzador.Core.Controles.MandosAutomaticos.Resumen(reparto)}" : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or FormatException)
+        {
+            Aviso($"No se pudieron repartir los mandos: {ex.Message}", true);
+            return null;
+        }
     }
 
     /// <summary>Abre el emulador sin juego (p. ej. para configurar los mandos) y vuelve al lanzador cuando se cierra.</summary>
@@ -836,6 +877,10 @@ public partial class MainWindow : Window
             }
             else if (nombre.StartsWith("Seccion:", StringComparison.OrdinalIgnoreCase) && Enum.TryParse<Seccion>(nombre[8..], true, out var seccion))
                 IrASeccion(seccion);
+            else if (nombre.Equals("Convertir", StringComparison.OrdinalIgnoreCase))
+                Mostrar(new PantallaConversion());
+            else if (nombre.Equals("Actualizaciones", StringComparison.OrdinalIgnoreCase))
+                await BuscarActualizacionesAsync(true); // con LANZADOR_VERSION=1.0.0 sale también el aviso del lanzador
             else if (nombre.Equals("Intro", StringComparison.OrdinalIgnoreCase))
                 MostrarIntro();
             else if (nombre.StartsWith("Negro:", StringComparison.OrdinalIgnoreCase))

@@ -48,6 +48,7 @@ public partial class PantallaControles : UserControl, ISeccion
             _jugadores[a.Jugador - 1].Asignacion = Copia(a);
 
         SembrarConocidos();
+        MostrarAutomatico();
         MostrarJugadores(Math.Max(Visibles, iniciales.Select(a => a.Jugador).DefaultIfEmpty(0).Max()));
         Seleccionar(0);
 
@@ -388,9 +389,28 @@ public partial class PantallaControles : UserControl, ISeccion
 
     // ───────────── Más opciones y salir ─────────────
 
+    private void MostrarAutomatico() =>
+        TextoAutomatico.Text = Estado.Config.MandosAutomaticos
+            ? "Mandos automáticos: activados. Al abrir un juego, los mandos encendidos ocupan los primeros jugadores (los de esta lista primero, en este orden), así siempre juega el que tienes en la mano. Se cambia en ☰."
+            : "Mandos automáticos: desactivados. Cada emulador usa siempre los jugadores de esta lista, aunque su mando esté apagado. Se cambia en ☰.";
+
     private void MasOpciones()
     {
-        var opciones = new List<OpcionMenu>();
+        var automatico = Estado.Config.MandosAutomaticos;
+        var opciones = new List<OpcionMenu>
+        {
+            new(automatico ? "Desactivar los mandos automáticos" : "Activar los mandos automáticos",
+                automatico
+                    ? "Ahora: al abrir un juego, los mandos encendidos pasan a ser los primeros jugadores"
+                    : "Al abrir un juego, los mandos encendidos pasan a ser los primeros jugadores",
+                () =>
+                {
+                    Estado.Config.MandosAutomaticos = !automatico;
+                    Estado.GuardarConfig();
+                    MostrarAutomatico();
+                    MainWindow.Actual.Aviso(Estado.Config.MandosAutomaticos ? "Mandos automáticos activados." : "Mandos automáticos desactivados.");
+                }),
+        };
         foreach (var emulador in _estados.Select(e => e.Emulador))
             opciones.Add(new($"Empezar desde los mandos de {emulador.Nombre}", "Toma los jugadores que tiene configurados ese emulador", () =>
             {

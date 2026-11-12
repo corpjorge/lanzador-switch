@@ -11,26 +11,33 @@ Lanzador estilo Big Picture para Windows que abre tus juegos de Switch con **Ede
 - **Biblioteca** con carátulas y fondos, filas de «Continuar jugando» y Favoritos, filtros y página de cada juego.
 - **Elegir emulador** en cada partida, con tu calificación y las listas de compatibilidad de Ryubing, Citron Neo y yuzu.
 - **Trucos** de switch-cheats-db y tinfoil.io para la versión exacta del juego (por Build ID), con nombres en español (traducción opcional con Claude Code o Codex) y el botón de cada truco. Durante el juego, **F7** muestra los trucos activos sin quitarle el foco al emulador.
-- **Emuladores:** muestra la versión instalada y la publicada, y los actualiza en su sitio verificando el sha256, con respaldo para volver atrás. Nunca toca las carpetas `user` ni `portable`.
-- **Controles:** eliges el mando de cada jugador en el lanzador y se escribe en Eden, Citron, Suyu y Ryujinx.
+- **Emuladores:** muestra la versión instalada y la publicada de Eden, Ryujinx (Ryubing Canary), Citron Neo y Suyu, y los instala o actualiza en su sitio verificando la descarga, con respaldo para volver atrás. Nunca toca las carpetas `user` ni `portable`.
+- **Avisa de las actualizaciones** al abrirlo: del propio lanzador (se actualiza solo con su instalador) y de los emuladores instalados; eliges cuáles actualizar.
+- **Controles:** eliges el mando de cada jugador en el lanzador y se escribe en Eden, Citron, Suyu y Ryujinx. Con los **mandos automáticos**, al abrir un juego los mandos encendidos ocupan los primeros jugadores, así siempre juega el que tienes en la mano.
+- **Convertir NSZ a NSP:** descomprime tus juegos `.nsz`, verifica el resultado y te deja enviar el original a la papelera. Sin programas externos ni claves.
 - **Volver al lanzador** desde el juego manteniendo Vista + LB + RB (Xbox), Create + L1 + R1 (PS5) o − + L + R (Pro Controller).
 
 ## Descarga e instalación
 
-1. Descarga `LanzadorSwitch-<versión>-win-x64.zip` de la [última versión](https://github.com/corpjorge/lanzador-switch/releases/latest).
+1. Descarga `LanzadorSwitch-<versión>-win-x64-instalador.exe` de la [última versión](https://github.com/corpjorge/lanzador-switch/releases/latest).
 2. Opcional: comprueba que llegó completo comparando su hash con `SHA256SUMS.txt`:
    ```powershell
-   Get-FileHash .\LanzadorSwitch-1.1.0-win-x64.zip -Algorithm SHA256
+   Get-FileHash .\LanzadorSwitch-1.2.0-win-x64-instalador.exe -Algorithm SHA256
    ```
-3. Descomprímelo en la carpeta donde tienes los emuladores, por ejemplo `C:\Switch`. Queda `C:\Switch\Lanzador\Lanzador.exe`, y el lanzador busca Eden, Ryujinx, Citron Neo y Suyu en `C:\Switch`.
-4. Abre `Lanzador.exe`. El ejecutable no está firmado, así que la primera vez Windows SmartScreen puede mostrar «Windows protegió su PC»: pulsa **Más información → Ejecutar de todas formas**.
+3. Ábrelo. No está firmado, así que Windows SmartScreen puede mostrar «Windows protegió su PC»: pulsa **Más información → Ejecutar de todas formas**. No pide permisos de administrador.
+4. Elige la carpeta. Por defecto es `C:\Switch\Lanzador`: el lanzador busca Eden, Ryujinx, Citron Neo y Suyu en la carpeta que la contiene (`C:\Switch`), y ahí instala los que le pidas. Si ya tienes tus emuladores en otra carpeta, por ejemplo `D:\Juegos\Switch`, instala en `D:\Juegos\Switch\Lanzador`.
+5. Al terminar queda en el menú Inicio (y en el escritorio, si lo marcas).
 
-Es portable: no necesita instalar .NET ni nada más, y guarda su configuración en la carpeta `datos`, junto al ejecutable. Para quitarlo, borra la carpeta. No lo descomprimas en `Archivos de programa`, porque ahí no podría guardar sus datos.
+No necesita instalar .NET ni nada más. Guarda su configuración en la carpeta `datos`, junto al ejecutable, por eso no se instala en `Archivos de programa`. Se quita desde **Configuración de Windows → Aplicaciones**; al desinstalar pregunta si también borras tus datos.
+
+**Actualizaciones:** cuando publiques o salga una versión nueva, el lanzador la detecta al abrirse y, si aceptas, descarga el instalador, verifica su sha256, se actualiza y se vuelve a abrir. Tus datos no se tocan.
+
+**Versión portable:** el mismo contenido está en `LanzadorSwitch-<versión>-win-x64.zip`. Descomprímelo donde tienes los emuladores (queda `C:\Switch\Lanzador\Lanzador.exe`) y abre `Lanzador.exe`. Si después lo actualizas desde el propio lanzador, el instalador se aplica sobre esa misma carpeta.
 
 ## Requisitos
 
 - Windows 10 u 11 de 64 bits.
-- Al menos un emulador: Eden, Ryujinx (Ryubing), Citron Neo o Suyu. Eden, Citron Neo y Suyu también se pueden instalar desde la sección Emuladores.
+- Al menos un emulador: Eden, Ryujinx (Ryubing), Citron Neo o Suyu. Los cuatro se pueden instalar desde la sección Emuladores.
 - Tus juegos. Para las claves y el firmware, puedes indicar una carpeta con tus archivos o conectar una instalación aparte de [Firma](https://github.com/corpjorge/firma).
 - Un mando Xbox, PlayStation, Pro Controller o compatible (también se maneja con el teclado).
 - Opcional: [Claude Code](https://claude.com/claude-code) o Codex para traducir los nombres de los trucos.
@@ -43,7 +50,7 @@ Es portable: no necesita instalar .NET ni nada más, y guarda su configuración 
 | A | Enter | Jugar (pregunta con qué emulador; el preferido va primero) |
 | X | T | Trucos del juego |
 | Y | O | Página del juego / opciones |
-| ☰ | M | Menú: configuración, volver a buscar juegos, pantalla completa, salir |
+| ☰ | M | Menú: configuración, convertir NSZ a NSP, buscar actualizaciones, volver a buscar juegos, pantalla completa, salir |
 | B | Esc | Volver |
 | — | F7 | Durante el juego: mostrar u ocultar los trucos activos |
 
@@ -70,8 +77,12 @@ Necesitas Windows y el [SDK de .NET 10](https://dotnet.microsoft.com/download/do
 dotnet build Lanzador.slnx -c Release
 dotnet run --project src\Lanzador.Pruebas         # pruebas del núcleo (leen tu instalación, no la modifican)
 dotnet publish src\Lanzador.App -c Release -o app  # el lanzador en app\Lanzador.exe
-pwsh herramientas\empaquetar.ps1                   # ZIP portable y SHA256SUMS.txt en publicar\
+pwsh herramientas\empaquetar.ps1                   # instalador, ZIP portable y SHA256SUMS.txt en publicar\
 ```
+
+El instalador se compila con [Inno Setup 6](https://jrsoftware.org/isinfo.php) (`winget install JRSoftware.InnoSetup`); sin él, `empaquetar.ps1` arma solo el ZIP.
+
+**Publicar una versión:** sube `<Version>` en `src\Lanzador.App\Lanzador.App.csproj`, crea el tag `vX.Y.Z` y un release de GitHub con ese tag que lleve el instalador, el ZIP y `SHA256SUMS.txt`. Los lanzadores instalados comparan el tag del último release con su versión y ofrecen actualizarse con el instalador `…-instalador.exe` de ese release.
 
 El código está en `src\Lanzador.Core` (núcleo), `src\Lanzador.App` (interfaz WPF) y `src\Lanzador.Pruebas` (pruebas).
 
@@ -83,6 +94,6 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 
 ## Licencia
 
-[MIT](LICENSE). Los componentes de terceros (SDL3, fuentes Sora, Lexend y JetBrains Mono, .NET) tienen sus propias licencias: ver [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+[MIT](LICENSE). Los componentes de terceros (SDL3, ZstdSharp, fuentes Sora, Lexend y JetBrains Mono, .NET) tienen sus propias licencias: ver [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
 
 Este proyecto no está afiliado a Nintendo ni a los proyectos de los emuladores. Nintendo Switch es una marca de Nintendo. Las carátulas que aparecen en las capturas son de sus dueños: el lanzador las descarga de tinfoil.media en tu equipo y no se distribuyen con él.

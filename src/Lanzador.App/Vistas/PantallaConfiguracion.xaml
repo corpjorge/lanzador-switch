@@ -55,7 +55,7 @@
                 <TextBlock Text="Internet" Style="{StaticResource title}" Margin="0,28,0,12"/>
                 <CheckBox x:Name="CasillaContenidoEnLinea" Content="Descargar carátulas, fondos, trucos y listas de compatibilidad" Style="{StaticResource Casilla}"/>
                 <TextBlock Style="{StaticResource caption}" TextWrapping="Wrap" TextTrimming="None"
-                           Text="Envía el identificador (Title ID) de tus juegos a tinfoil.media, tinfoil.io y GitHub. Desactivado, se usa solo lo que ya se descargó. Las actualizaciones de emuladores se buscan aparte, en la sección Emuladores."/>
+                           Text="Envía el identificador (Title ID) de tus juegos a tinfoil.media, tinfoil.io y GitHub. Desactivado, se usa solo lo que ya se descargó. Las actualizaciones se configuran aparte, más abajo."/>
                 <WrapPanel>
                     <Button Content="Leer la política de privacidad" Style="{StaticResource BotonPlano}" Click="AlLeerPrivacidad"/>
                 </WrapPanel>
@@ -76,7 +76,10 @@
                 </WrapPanel>
                 <TextBlock x:Name="TextoPrueba" Style="{StaticResource caption}" TextWrapping="Wrap" TextTrimming="None" Margin="0,0,0,10"/>
 
-                <TextBlock Text="Actualizaciones de emuladores" Style="{StaticResource title}" Margin="0,28,0,12"/>
+                <TextBlock Text="Actualizaciones" Style="{StaticResource title}" Margin="0,28,0,12"/>
+                <CheckBox x:Name="CasillaBuscarActualizaciones" Content="Al abrir el lanzador, avisar si hay una versión nueva del lanzador o de los emuladores instalados" Style="{StaticResource Casilla}"/>
+                <TextBlock Style="{StaticResource caption}" TextWrapping="Wrap" TextTrimming="None" Margin="0,0,0,10"
+                           Text="Consulta GitHub y las páginas oficiales de cada emulador; no envía ningún dato tuyo. Nada se instala sin que lo confirmes. También puedes buscarlas a mano en ☰ → Buscar actualizaciones."/>
                 <TextBlock Text="Canal de Eden" Style="{StaticResource caption}"/>
                 <ComboBox x:Name="ComboCanalEden" Style="{StaticResource Selector}" Margin="0,4,0,10" Width="460" HorizontalAlignment="Left">
                     <ComboBoxItem Content="Nightly (PGO, se publica casi a diario)" Tag="nightly"/>

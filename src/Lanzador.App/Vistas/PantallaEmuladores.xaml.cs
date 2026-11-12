@@ -37,8 +37,34 @@ public partial class PantallaEmuladores : UserControl, ISeccion
             _ = LeerClavesFirmwareAsync();
             if (_emuladores.All(e => e.Instalada == null))
                 await ConsultarTodosAsync();
+            await ActualizarPendientesAsync();
         };
         Unloaded += (_, _) => Estado.AlCambiarOrigen -= AlCambiarOrigen;
+    }
+
+    /// <summary>Emuladores que hay que actualizar al abrir esta pantalla (elegidos en el aviso de actualizaciones).</summary>
+    public static List<string> Pendientes { get; } = new();
+
+    /// <summary>Actualiza, uno tras otro, los emuladores de <see cref="Pendientes"/> que de verdad tengan una versión nueva.</summary>
+    public async Task ActualizarPendientesAsync()
+    {
+        if (Pendientes.Count == 0 || _emuladores.Any(e => e.Ocupado))
+            return;
+        var ids = Pendientes.ToList();
+        Pendientes.Clear();
+        foreach (var id in ids)
+        {
+            var indice = _emuladores.FindIndex(e => e.Emulador.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+            if (indice < 0 || !IsLoaded)
+                continue;
+            var vm = _emuladores[indice];
+            if (vm.Disponible == null)
+                await ConsultarAsync(vm);
+            if (!vm.Instalado || !vm.PuedeDescargar || vm.AlDia || vm.Instalada?.Version == null)
+                continue;
+            Seleccionar(indice);
+            await ActualizarAsync(vm);
+        }
     }
 
     private void AlCambiarOrigen()
@@ -223,6 +249,8 @@ public partial class PantallaEmuladores : UserControl, ISeccion
                             ? $"Se guarda un respaldo para volver atrás. Tu carpeta {datos} no se toca."
                             : $"Se instala en {Path.GetDirectoryName(vm.Emulador.RutaExe)} en modo portable (carpeta {datos})" +
                               (Estado.OrigenPara(vm.Emulador) is { Claves: not null } or { Firmware: not null } ? ", con las claves y el firmware del origen configurado." : "."));
+        if (d is { Sha256: null, SinSha256Publicado: true })
+            subtitulo += "\nEsta fuente no publica el sha256: la descarga se comprueba por el tamaño publicado y por su contenido.";
         var opciones = new List<OpcionMenu> { new(opcion, d.Archivo, () => _ = ActualizarAsync(vm)) };
         if (d.PaginaNotas != null)
             opciones.Add(new("Ver los cambios", "Abre la página de la versión en el navegador", () => Menus.Abrir(d.PaginaNotas, null)));

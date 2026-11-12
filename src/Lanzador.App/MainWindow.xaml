@@ -161,7 +161,7 @@
                     <TextBlock x:Name="TextoAbriendo" Style="{StaticResource display-l}" HorizontalAlignment="Center" TextAlignment="Center"
                                MaxWidth="1500"/>
                     <TextBlock x:Name="TextoAbriendoCon" Style="{StaticResource body-l}" Foreground="{StaticResource ink-200}" HorizontalAlignment="Center"
-                               Margin="0,8,0,0"/>
+                               TextAlignment="Center" TextWrapping="Wrap" TextTrimming="None" MaxWidth="1500" Margin="0,8,0,0"/>
                     <TextBlock Text="PARA VOLVER AL LANZADOR, MANTÉN 1,5 SEGUNDOS" Style="{StaticResource label}" HorizontalAlignment="Center" Margin="0,56,0,18"/>
                     <StackPanel x:Name="ListaCombos" HorizontalAlignment="Center"/>
                     <TextBlock x:Name="TextoTeclaTrucos" Style="{StaticResource body}" HorizontalAlignment="Center" Margin="0,30,0,0"/>
