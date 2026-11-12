@@ -33,6 +33,10 @@ public partial class MainWindow : Window
     private string _comboUsado = Mando.TextoComboCerrar;
     private readonly EscuchaHid _escuchaHid = new();
     private int _lecturaOrigen;
+    private ClienteFirma? _clienteFirma;
+    private CancellationTokenSource? _vigilanciaFirma;
+    private string? _carpetaFirma;
+    private bool _instalacionClavesPendiente;
     private bool _instalandoClaves;
     private readonly HashSet<string> _avisadosClavesPendientes = new(StringComparer.OrdinalIgnoreCase);
     private readonly DispatcherTimer _reloj = new() { Interval = TimeSpan.FromSeconds(10) };
@@ -99,7 +103,7 @@ public partial class MainWindow : Window
             CrearPestanas();
             CambiarSeccion(Seccion.Inicio, 0);
             if (Estado.Config.ClavesFirmware.BuscarAlIniciar)
-                _ = LeerCarpetaClavesAsync();
+                _ = ConsultarClavesFirmwareAsync();
             _ = Catalogo.AsegurarAsync();
             // Mientras corre la intro se cargan los juegos y las carátulas detrás.
             if (Estado.Config.MostrarIntro && !ReducirMovimiento && Environment.GetEnvironmentVariable("LANZADOR_PRUEBA") == null)
@@ -115,7 +119,11 @@ public partial class MainWindow : Window
                 Aviso($"Espera unos segundos: {copia}. Si cierras ahora, el emulador quedaría a medias.", true);
             }
         };
-        Closed += (_, _) => _mando.Dispose();
+        Closed += (_, _) =>
+        {
+            _vigilanciaFirma?.Cancel();
+            _mando.Dispose();
+        };
     }
 
     private IPantalla? PantallaArriba =>
@@ -342,13 +350,20 @@ public partial class MainWindow : Window
     private void ActualizarChipClaves()
     {
         var origen = Estado.Origen;
-        if (origen == null && Estado.ErrorOrigen == null && !Estado.LeyendoOrigen)
+        var usaFirma = Estado.Config.ClavesFirmware is { Configurada: true, UsarFirma: true };
+        if (!usaFirma && origen == null && Estado.ErrorOrigen == null && !Estado.LeyendoOrigen)
         {
             ChipClaves.Visibility = Visibility.Collapsed;
             return;
         }
         string texto, tono;
-        if (Estado.LeyendoOrigen)
+        if (usaFirma)
+        {
+            texto = Estado.ResumenFirma;
+            tono = Estado.LeyendoOrigen ? "info" : Estado.ErrorOrigen != null || Estado.Firma == null
+                || !Estado.Firma.Elementos.Any(e => e.Descargado != null) ? "warn" : "ok";
+        }
+        else if (Estado.LeyendoOrigen)
             (texto, tono) = ("Leyendo la carpeta de claves y firmware…", "info");
         else if (origen == null)
             (texto, tono) = ("No se pudo leer la carpeta de claves", "danger");
@@ -364,6 +379,7 @@ public partial class MainWindow : Window
             tono = "ok";
         }
         TextoClaves.Text = texto;
+        ChipClaves.ToolTip = Estado.ErrorOrigen;
         ChipClaves.Background = (Brush)FindResource(tono == "info" ? "accent-soft" : tono + "-soft");
         PuntoClaves.Fill = (Brush)FindResource(tono == "info" ? "focus" : tono + "-500");
         ChipClaves.Visibility = Visibility.Visible;
@@ -572,11 +588,116 @@ public partial class MainWindow : Window
         return (codigo, DateTime.UtcNow - inicio);
     }
 
-    /// <summary>
-    /// Lee la carpeta de claves y firmware elegida en Configuración (no descarga nada) y, si así se pidió,
-    /// instala lo nuevo en los emuladores cerrados.
-    /// </summary>
-    public async Task LeerCarpetaClavesAsync()
+    public async Task ConsultarClavesFirmwareAsync()
+    {
+        var config = Estado.Config.ClavesFirmware;
+        if (config is { Configurada: true, UsarFirma: true })
+        {
+            ++_lecturaOrigen;
+            await ConsultarFirmaAsync(config.Carpeta);
+            return;
+        }
+
+        DetenerFirma();
+        Estado.Firma = null;
+        await LeerCarpetaClavesAsync();
+    }
+
+    private async Task ConsultarFirmaAsync(string carpeta)
+    {
+        if (_clienteFirma != null && string.Equals(carpeta, _carpetaFirma, StringComparison.OrdinalIgnoreCase))
+        {
+            if (Estado.Firma == null)
+                return; // El arranque ya solicita una consulta.
+            var cancelacion = _vigilanciaFirma!;
+            try
+            {
+                AplicarEstadoFirma(await _clienteFirma.ConsultarAsync(cancelacion.Token), cancelacion.Token);
+            }
+            catch (Exception ex) when (EsErrorFirma(ex))
+            {
+                InformarErrorFirma(ex, cancelacion.Token);
+            }
+            return;
+        }
+
+        DetenerFirma();
+        (Estado.Origen, Estado.Firma, Estado.ErrorOrigen, Estado.LeyendoOrigen) = (null, null, null, true);
+        Estado.AvisarCambioOrigen();
+        var nuevaVigilancia = _vigilanciaFirma = new CancellationTokenSource();
+        var token = nuevaVigilancia.Token;
+        try
+        {
+            var cliente = _clienteFirma = new ClienteFirma(carpeta);
+            _carpetaFirma = carpeta;
+            var estado = await cliente.IniciarYConsultarAsync(token);
+            AplicarEstadoFirma(estado, token);
+            _ = VigilarFirmaAsync(cliente, estado, token);
+        }
+        catch (Exception ex) when (EsErrorFirma(ex))
+        {
+            InformarErrorFirma(ex, token);
+        }
+    }
+
+    private async Task VigilarFirmaAsync(ClienteFirma cliente, EstadoFirma estado, CancellationToken token)
+    {
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                var nuevo = await cliente.EsperarCambioAsync(estado.Revision, token);
+                if (nuevo.Revision != estado.Revision || nuevo.Consultando != estado.Consultando)
+                    AplicarEstadoFirma(nuevo, token);
+                estado = nuevo;
+            }
+        }
+        catch (Exception ex) when (EsErrorFirma(ex))
+        {
+            InformarErrorFirma(ex, token);
+        }
+    }
+
+    private void AplicarEstadoFirma(EstadoFirma estado, CancellationToken token)
+    {
+        if (token.IsCancellationRequested || (Estado.Firma is { } anterior && estado.Revision < anterior.Revision))
+            return;
+
+        Estado.Firma = estado;
+        Estado.LeyendoOrigen = estado.Consultando;
+        var error = estado.Errores.FirstOrDefault();
+        if (error == null && !estado.Elementos.Any(e => e.Descargado != null))
+            error = estado.Elementos.Select(e => e.Error).FirstOrDefault(e => !string.IsNullOrWhiteSpace(e));
+        Estado.ErrorOrigen = estado.Consultando || error == null ? null : $"Firma: {error}";
+        Estado.AvisarCambioOrigen();
+        if (!estado.Consultando)
+            _ = InstalarClavesAutomaticoAsync();
+    }
+
+    private static bool EsErrorFirma(Exception ex) => ex is IOException or TimeoutException or InvalidDataException
+        or System.Text.Json.JsonException or Win32Exception or UnauthorizedAccessException
+        or OperationCanceledException or ArgumentException or InvalidOperationException or NotSupportedException;
+
+    private void InformarErrorFirma(Exception ex, CancellationToken token)
+    {
+        if (token.IsCancellationRequested)
+            return;
+        DetenerFirma();
+        (Estado.Firma, Estado.ErrorOrigen, Estado.LeyendoOrigen) = (null, $"Firma: {ex.Message}", false);
+        Estado.AvisarCambioOrigen();
+    }
+
+    private void DetenerFirma()
+    {
+        _vigilanciaFirma?.Cancel();
+        _vigilanciaFirma?.Dispose();
+        _vigilanciaFirma = null;
+        _clienteFirma?.Dispose();
+        _clienteFirma = null;
+        _carpetaFirma = null;
+    }
+
+    private async Task LeerCarpetaClavesAsync()
     {
         var lectura = ++_lecturaOrigen;
         var config = Estado.Config.ClavesFirmware;
@@ -614,15 +735,26 @@ public partial class MainWindow : Window
     /// </summary>
     public async Task InstalarClavesAutomaticoAsync()
     {
-        if (_instalandoClaves || _procesoJuego != null || Estado.Origen is not { } origen || !Estado.Config.ClavesFirmware.InstalarAutomaticamente)
+        if (_instalandoClaves)
+        {
+            _instalacionClavesPendiente = true;
+            return;
+        }
+        var config = Estado.Config.ClavesFirmware;
+        if (_procesoJuego != null || !config.InstalarAutomaticamente || Estado.LeyendoOrigen
+            || (config.UsarFirma ? Estado.Firma == null : Estado.Origen == null))
             return;
         _instalandoClaves = true;
         try
         {
             foreach (var emulador in Estado.EmuladoresDisponibles.ToList())
             {
+                if (!ReferenceEquals(Estado.Config.ClavesFirmware, config))
+                    break;
+                if (Estado.OrigenPara(emulador) is not { } origen)
+                    continue;
                 var estado = await Task.Run(() => InstaladorClavesFirmware.Leer(emulador, origen));
-                if (!estado.HayNuevas)
+                if (!estado.HayNuevas || !ReferenceEquals(Estado.Config.ClavesFirmware, config))
                     continue;
                 if (Actualizador.Bloqueo(emulador) != null)
                 {
@@ -632,7 +764,7 @@ public partial class MainWindow : Window
                 }
                 Estado.CopiaEnCurso = $"se están instalando claves y firmware en {emulador.Nombre}";
                 FijarEstado($"Instalando claves y firmware en {emulador.Nombre}…");
-                var resultado = await Task.Run(() => InstaladorClavesFirmware.Instalar(emulador, origen));
+                var resultado = await Task.Run(() => InstaladorClavesFirmware.Instalar(emulador, origen, soloNuevos: true));
                 Estado.CopiaEnCurso = null;
                 FijarEstado("");
                 _avisadosClavesPendientes.Remove(emulador.Id);
@@ -644,6 +776,11 @@ public partial class MainWindow : Window
             Estado.CopiaEnCurso = null;
             _instalandoClaves = false;
             Estado.AvisarCambioOrigen();
+            if (_instalacionClavesPendiente)
+            {
+                _instalacionClavesPendiente = false;
+                _ = InstalarClavesAutomaticoAsync();
+            }
         }
     }
 

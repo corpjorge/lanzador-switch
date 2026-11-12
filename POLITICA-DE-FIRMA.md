@@ -46,6 +46,7 @@ Estos son los servicios a los que puede conectarse. Cada petición lleva, como c
 | nightly.eden-emu.dev, stable.eden-emu.dev, git.eden-emu.dev, api.github.com y github.com (Citron Neo, Suyu) | Ver y descargar versiones de los emuladores | Ninguno | Al abrir la sección Emuladores; solo descarga cuando confirmas una instalación o actualización | No abrir la sección Emuladores |
 
 - **Descargas:** ☰ → Configuración → Internet → «Descargar carátulas, fondos, trucos y listas de compatibilidad». Desactivado, el lanzador usa solo lo que ya se descargó y no envía el identificador de tus juegos a nadie.
+- **Firma:** si activas su integración, el lanzador inicia el agente instalado aparte y consulta sus resultados por un canal local de Windows. Firma accede a su catálogo y a los servidores de descarga. Se desactiva en **Configuración → Claves y firmware → Usar Firma**.
 - **Traducción con IA:** viene en «Ninguno». Si eliges Claude Code o Codex en ☰ → Configuración, los nombres se envían con tu propia cuenta de esa herramienta.
 - Políticas de privacidad de terceros: [GitHub](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement), [Anthropic](https://www.anthropic.com/legal/privacy) y [OpenAI](https://openai.com/policies/privacy-policy/). Las de tinfoil.io y tinfoil.media, en sus propios sitios.
 

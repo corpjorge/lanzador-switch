@@ -26,6 +26,7 @@ static class PruebasClavesFirmware
         Directory.CreateDirectory(carpeta);
         Versiones();
         CarpetaElegida(Path.Combine(carpeta, "origenes"));
+        OrigenFirma(Path.Combine(carpeta, "firma"));
         Instalacion(carpeta);
         return _fallos;
     }
@@ -85,6 +86,50 @@ static class PruebasClavesFirmware
         var s2 = OrigenClavesFirmware.Leer(sueltos);
         Comprobar(s2.Claves is { Version: "2026.10.20", VersionConocida: false }, "Claves sin versión en el nombre: se usa la fecha del archivo");
         Comprobar(s2.Firmware is { EsZip: false, VersionConocida: false } && s2.Firmware.Ruta.EndsWith("volcado"), "Firmware: también vale una carpeta con los .nca");
+    }
+
+    private static void OrigenFirma(string carpeta)
+    {
+        Console.WriteLine("\n== Claves y firmware: variantes descargadas por Firma");
+        var prodEden = Path.Combine(carpeta, "eden", "prod.keys");
+        var prodRyu = Path.Combine(carpeta, "ryujinx", "prod.keys");
+        var zip = Path.Combine(carpeta, "archive.zip");
+        Escribir(prodEden, "eden");
+        Escribir(prodRyu, "ryujinx");
+        CrearZip(zip, 3);
+
+        using var documento = System.Text.Json.JsonDocument.Parse(
+            System.Text.Json.JsonSerializer.Serialize(new
+            {
+                schemaVersion = 1,
+                revision = 3,
+                isChecking = false,
+                items = new[]
+                {
+                    Variante("keys", "eden", "china", "24.0.0", new { archivePath = zip, version = "24.0.0", files = Archivos(prodRyu) }),
+                    Variante("keys", "eden", "global", "24.0.0", new { archivePath = zip, version = "23.0.0", files = Archivos(prodEden) }),
+                    Variante("keys", "ryujinx", "global", "22.0.0", new { archivePath = zip, version = "22.0.0", files = Archivos(prodRyu) }),
+                    Variante("firmware", "yuzu", "global", "23.0.0", null),
+                    Variante("firmware", "switch", "global", "22.0.0", new { archivePath = zip, version = "22.0.0" }),
+                },
+            }));
+        var estado = EstadoFirma.Leer(documento.RootElement);
+        var eden = new EmuladorConfig { Id = "eden", Tipo = TipoEmulador.Yuzu };
+        var ryujinx = new EmuladorConfig { Id = "ryujinx", Tipo = TipoEmulador.Ryujinx };
+        var origenEden = estado.OrigenPara(carpeta, eden);
+        var origenRyu = estado.OrigenPara(carpeta, ryujinx);
+        Comprobar(origenEden.Claves is { Version: "23.0.0" } && origenEden.Claves.Archivos["prod.keys"].Ruta == prodEden,
+            "Eden usa su variante global y la versión descargada");
+        Comprobar(origenRyu.Claves?.Archivos["prod.keys"].Ruta == prodRyu, "Ryujinx usa su propia variante");
+        Comprobar(origenEden.Firmware?.Ruta == zip && origenEden.Firmware.Version == "22.0.0",
+            "Firma usa el firmware común cuando la variante específica está pendiente");
+        File.Delete(prodEden);
+        Comprobar(estado.OrigenPara(carpeta, eden).Claves == null, "Se descarta una copia cuyo archivo ya no existe");
+
+        static object Variante(string kind, string variant, string region, string availableVersion, object? downloaded) =>
+            new { id = $"{kind}/{variant}/{region}", kind, variant, region, availableVersion, status = "ready", downloaded };
+
+        static Dictionary<string, object> Archivos(string path) => new() { ["prod.keys"] = new { path } };
     }
 
     private static void Instalacion(string carpeta)
@@ -151,6 +196,15 @@ static class PruebasClavesFirmware
         Directory.CreateDirectory(ryujinx.CarpetaDatos);
         Comprobar(InstaladorClavesFirmware.Leer(ryujinx, origenCarpeta).HayNuevas, "Ryujinx: sin claves ni firmware, lo de la carpeta se instala solo");
         var r2 = InstaladorClavesFirmware.Instalar(ryujinx, origenCarpeta);
+        var otroFirmware = Path.Combine(carpeta, "Firmware 20.0.0.zip");
+        CrearZip(otroFirmware, 1);
+        var origenMixto = origen24 with { Firmware = new("20.0.0", true, otroFirmware, new Dictionary<string, ArchivoOrigen>()) };
+        var prodInstalado = Path.Combine(eden.CarpetaDatos, "keys", "prod.keys");
+        File.Delete(prodInstalado);
+        var resultadoMixto = InstaladorClavesFirmware.Instalar(eden, origenMixto, soloNuevos: true);
+        Comprobar(resultadoMixto.Exito && File.Exists(Path.Combine(registrado, "vieja.nca"))
+            && File.ReadAllText(prodInstalado) == "header_key = 44556677\n",
+            "La instalación automática agrega las claves que faltan y conserva el firmware de versión desconocida");
         Console.WriteLine($"  {r2.Mensaje}");
         var registradoRyu = Path.Combine(ryujinx.CarpetaDatos, "bis", "system", "Contents", "registered");
         Comprobar(r2.Exito && File.Exists(Path.Combine(ryujinx.CarpetaDatos, "system", "prod.keys")), "Ryujinx: prod.keys en portable\\system");

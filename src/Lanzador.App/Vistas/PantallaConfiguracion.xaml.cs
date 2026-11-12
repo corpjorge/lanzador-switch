@@ -37,6 +37,7 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         Elegir(ComboCanalEden, _copia.Actualizaciones.CanalEden);
         Elegir(ComboVarianteCitron, _copia.Actualizaciones.VarianteCitron);
         CampoClaves.Text = _copia.ClavesFirmware.Carpeta;
+        CasillaUsarFirma.IsChecked = _copia.ClavesFirmware.UsarFirma;
         CasillaClavesAlIniciar.IsChecked = _copia.ClavesFirmware.BuscarAlIniciar;
         CasillaClavesAutomatica.IsChecked = _copia.ClavesFirmware.InstalarAutomaticamente;
         CasillaSonidos.IsChecked = _copia.SonidosActivados;
@@ -136,11 +137,14 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
 
     private void AlExaminarClaves(object sender, RoutedEventArgs e)
     {
-        var dialogo = new OpenFolderDialog { Title = "Carpeta con tus claves y tu firmware" };
+        var dialogo = new OpenFolderDialog { Title = "Carpeta de Firma o de claves y firmware" };
         if (Directory.Exists(CampoClaves.Text.Trim().Trim('"')))
             dialogo.InitialDirectory = CampoClaves.Text.Trim().Trim('"');
         if (dialogo.ShowDialog() == true)
+        {
             CampoClaves.Text = dialogo.FolderName;
+            CasillaUsarFirma.IsChecked = File.Exists(Path.Combine(dialogo.FolderName, "Firma.exe"));
+        }
     }
 
     private void AlExaminarDatos(object sender, RoutedEventArgs e)
@@ -233,6 +237,7 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
             emulador.RutaExe = emulador.RutaExe.Trim().Trim('"');
 
         _copia.ClavesFirmware.Carpeta = CampoClaves.Text.Trim().Trim('"');
+        _copia.ClavesFirmware.UsarFirma = CasillaUsarFirma.IsChecked == true;
         _copia.ClavesFirmware.BuscarAlIniciar = CasillaClavesAlIniciar.IsChecked == true;
         _copia.ClavesFirmware.InstalarAutomaticamente = CasillaClavesAutomatica.IsChecked == true;
         var clavesCambiaron = JsonSerializer.Serialize(_copia.ClavesFirmware) != JsonSerializer.Serialize(Estado.Config.ClavesFirmware);
@@ -245,7 +250,7 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         Estado.GuardarConfig();
         MainWindow.Actual.AplicarPreferencias();
         if (clavesCambiaron)
-            _ = MainWindow.Actual.LeerCarpetaClavesAsync();
+            _ = MainWindow.Actual.ConsultarClavesFirmwareAsync();
 
         var ventana = MainWindow.Actual;
         if (ventana.EnPantallaCompleta != _copia.PantallaCompleta)

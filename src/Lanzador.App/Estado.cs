@@ -28,10 +28,35 @@ public static class Estado
     /// <summary>Lo que hay en la carpeta de claves y firmware elegida; null si no hay carpeta o no se ha leído.</summary>
     public static OrigenClavesFirmware? Origen { get; set; }
 
-    /// <summary>Por qué no se pudo leer la carpeta la última vez, o null.</summary>
+    public static EstadoFirma? Firma { get; set; }
+
+    public static OrigenClavesFirmware? OrigenPara(EmuladorConfig emulador) =>
+        Config.ClavesFirmware.UsarFirma ? Firma?.OrigenPara(Config.ClavesFirmware.Carpeta, emulador) : Origen;
+
+    public static string ResumenFirma
+    {
+        get
+        {
+            if (ErrorOrigen is { } error)
+                return error;
+            if (LeyendoOrigen)
+                return "Firma está buscando claves y firmware…";
+            if (Firma == null)
+                return "Firma está configurada. Pulsa X en Emuladores para consultar.";
+
+            var copias = Firma.Elementos.Where(e => e.Descargado != null).ToList();
+            var claves = copias.Count(e => e.EsClaves);
+            var firmware = copias.Count(e => e.EsFirmware);
+            return claves + firmware == 0
+                ? "Firma todavía no tiene claves ni firmware descargados."
+                : $"Firma tiene {claves} variantes de claves y {firmware} de firmware.";
+        }
+    }
+
+    /// <summary>Último error del origen seleccionado.</summary>
     public static string? ErrorOrigen { get; set; }
 
-    /// <summary>Se está leyendo la carpeta.</summary>
+    /// <summary>Hay una consulta en curso.</summary>
     public static bool LeyendoOrigen { get; set; }
 
     public static event Action? AlCambiarOrigen;

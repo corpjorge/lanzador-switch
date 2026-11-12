@@ -141,13 +141,14 @@ Cómo actualiza:
 
 ## Claves y firmware
 
-El lanzador **no descarga ni incluye** claves (`prod.keys`, `title.keys`) ni firmware. Cada emulador necesita los suyos, sacados de tu propia consola. Puedes ponerlos con las opciones de cada emulador o dejar que el lanzador los copie a todos:
+El lanzador admite dos orígenes de claves y firmware. Desde **☰ → Configuración → Claves y firmware → Examinar…**, elige uno:
 
-1. En **☰ → Configuración → Claves y firmware**, pulsa **Examinar…** y elige la carpeta donde guardas los tuyos. El lanzador busca ahí (hasta 4 subcarpetas) un `prod.keys`, con su `title.keys` si está al lado, y un firmware: un `.zip` con los `.nca` o una carpeta con ellos.
-2. **Revisar la carpeta al abrir el lanzador** la vuelve a leer en cada arranque. En la sección Emuladores, **X** la lee de nuevo.
-3. **Instalar solo las claves y el firmware nuevos** los copia a los emuladores cerrados cuando a un emulador le faltan o cuando los de tu carpeta son de una versión más nueva. Si un emulador está abierto, espera a que lo cierres.
+- **Firma:** extrae [Firma portable](https://github.com/corpjorge/firma/releases/latest) en una carpeta escribible. Elige la carpeta donde quedó `Firma.exe`, marca **Usar Firma para buscar y descargar claves y firmware** y guarda. El lanzador inicia Firma, recibe por el canal local las variantes que ya están descargadas y muestra el estado de la consulta. Firma consulta periódicamente mientras el lanzador esté abierto.
+- **Archivos propios:** elige una carpeta con `prod.keys`, su `title.keys` si está disponible, y el firmware en ZIP o en una carpeta con los `.nca`. Deja desmarcada la opción de Firma. Se buscan archivos hasta cuatro niveles de subcarpetas.
 
-La versión se toma del nombre del archivo o de su carpeta (por ejemplo `20.1.0\prod.keys` o `Firmware 20.1.0.zip`). Si el nombre no la dice, se usa la fecha del archivo y el lanzador no reemplaza por su cuenta lo que el emulador ya tenga: lo instalas tú desde **Opciones (Y) → Instalar claves y firmware**.
+**Consultar al abrir el lanzador** comprueba el origen en cada arranque. Desde **Emuladores**, pulsa **X** para volver a consultar. **Instalar solo las claves y el firmware nuevos** copia a los emuladores cerrados lo que les falte o tenga una versión más nueva.
+
+Para los archivos propios, la versión se toma del nombre del archivo o de su carpeta (por ejemplo `20.1.0\prod.keys` o `Firmware 20.1.0.zip`). Si el nombre no la dice, se usa la fecha del archivo y el lanzador no reemplaza por su cuenta lo que el emulador ya tenga: lo instalas tú desde **Opciones (Y) → Instalar claves y firmware**.
 
 Solo se escribe en la carpeta de claves del emulador y en la de firmware de su NAND de sistema; partidas, juegos instalados y configuración no se tocan. Antes de reemplazar se guarda un respaldo en `datos\respaldos`, y **Opciones (Y) → Volver a las claves y el firmware anteriores** lo repone. Tu carpeta solo se lee.
 

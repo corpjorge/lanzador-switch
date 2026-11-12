@@ -25,9 +25,13 @@ public sealed record EstadoClavesFirmware
                          && (ClavesOrigen == null || ClavesComoOrigen) && (FirmwareOrigen == null || FirmwareComoOrigen);
 
     /// <summary>La carpeta elegida tiene algo más nuevo que lo instalado (o al emulador le falta algo).</summary>
-    public bool HayNuevas =>
-        (ClavesOrigen != null && !ClavesComoOrigen && (!HayClaves || InstaladorClavesFirmware.EsMasNueva(ClavesOrigen, VersionClaves)))
-        || (FirmwareOrigen != null && !FirmwareComoOrigen && (ArchivosFirmware == 0 || InstaladorClavesFirmware.EsMasNueva(FirmwareOrigen, VersionFirmware)));
+    public bool ClavesNuevas =>
+        ClavesOrigen != null && !ClavesComoOrigen && (!HayClaves || InstaladorClavesFirmware.EsMasNueva(ClavesOrigen, VersionClaves));
+
+    public bool FirmwareNuevo =>
+        FirmwareOrigen != null && !FirmwareComoOrigen && (ArchivosFirmware == 0 || InstaladorClavesFirmware.EsMasNueva(FirmwareOrigen, VersionFirmware));
+
+    public bool HayNuevas => ClavesNuevas || FirmwareNuevo;
 
     public string Resumen
     {
@@ -125,7 +129,7 @@ public static partial class InstaladorClavesFirmware
     /// Instala las claves y el firmware de la carpeta elegida que el emulador no tenga ya iguales. Respalda las claves
     /// y mueve el firmware anterior a app\datos\respaldos antes de reemplazarlo.
     /// </summary>
-    public static ResultadoClavesFirmware Instalar(EmuladorConfig emulador, OrigenClavesFirmware origen, IProgress<string>? progreso = null)
+    public static ResultadoClavesFirmware Instalar(EmuladorConfig emulador, OrigenClavesFirmware origen, IProgress<string>? progreso = null, bool soloNuevos = false)
     {
         if (Actualizador.Bloqueo(emulador) is { } motivo)
             return new(false, motivo);
@@ -133,8 +137,8 @@ public static partial class InstaladorClavesFirmware
             return new(false, $"{emulador.Nombre} no tiene carpeta de datos configurada.");
 
         var estado = Leer(emulador, origen);
-        var instalarClaves = estado.ClavesOrigen != null && !estado.ClavesComoOrigen;
-        var instalarFirmware = estado.FirmwareOrigen != null && !estado.FirmwareComoOrigen;
+        var instalarClaves = soloNuevos ? estado.ClavesNuevas : estado.ClavesOrigen != null && !estado.ClavesComoOrigen;
+        var instalarFirmware = soloNuevos ? estado.FirmwareNuevo : estado.FirmwareOrigen != null && !estado.FirmwareComoOrigen;
         if (!instalarClaves && !instalarFirmware)
             return new(true, estado.ClavesOrigen == null && estado.FirmwareOrigen == null
                 ? "La carpeta elegida no tiene claves ni firmware."

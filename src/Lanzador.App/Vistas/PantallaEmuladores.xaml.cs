@@ -49,6 +49,12 @@ public partial class PantallaEmuladores : UserControl, ISeccion
 
     private void ActualizarTextoOrigen()
     {
+        if (Estado.Config.ClavesFirmware is { Configurada: true, UsarFirma: true })
+        {
+            TextoOrigen.Text = Estado.ResumenFirma;
+            return;
+        }
+
         var origen = Estado.Origen;
         if (Estado.LeyendoOrigen)
             TextoOrigen.Text = "Leyendo tu carpeta de claves y firmware…";
@@ -65,10 +71,10 @@ public partial class PantallaEmuladores : UserControl, ISeccion
 
     private async Task LeerClavesFirmwareAsync()
     {
-        var origen = Estado.Origen;
         foreach (var vm in _emuladores.Where(e => e.Instalado && !e.Ocupado))
         {
             var emulador = vm.Emulador;
+            var origen = Estado.OrigenPara(emulador);
             vm.ClavesFirmware = await Task.Run(() => InstaladorClavesFirmware.Leer(emulador, origen));
             vm.Refrescar();
         }
@@ -76,9 +82,10 @@ public partial class PantallaEmuladores : UserControl, ISeccion
 
     private async Task InstalarClavesFirmwareAsync(EmuladorVM vm)
     {
-        if (Estado.Origen is not { } origen)
+        var origen = Estado.OrigenPara(vm.Emulador);
+        if (origen == null || (origen.Claves == null && origen.Firmware == null))
         {
-            MainWindow.Actual.Aviso("Elige tu carpeta de claves y firmware en Configuración.", true);
+            MainWindow.Actual.Aviso("El origen configurado aún no tiene claves ni firmware para este emulador.", true);
             return;
         }
         if (Actualizador.Bloqueo(vm.Emulador) is { } motivo)
@@ -135,7 +142,7 @@ public partial class PantallaEmuladores : UserControl, ISeccion
                 {
                     _ = ConsultarTodosAsync();
                     if (Estado.Config.ClavesFirmware.Configurada)
-                        _ = MainWindow.Actual.LeerCarpetaClavesAsync();
+                        _ = MainWindow.Actual.ConsultarClavesFirmwareAsync();
                 }
                 break;
             case Accion.Atras: PedirSalir(MainWindow.Actual.Volver); break;
@@ -215,7 +222,7 @@ public partial class PantallaEmuladores : UserControl, ISeccion
                         (vm.Instalado
                             ? $"Se guarda un respaldo para volver atrás. Tu carpeta {datos} no se toca."
                             : $"Se instala en {Path.GetDirectoryName(vm.Emulador.RutaExe)} en modo portable (carpeta {datos})" +
-                              (Estado.Origen != null ? ", con las claves y el firmware de tu carpeta." : "."));
+                              (Estado.OrigenPara(vm.Emulador) is { Claves: not null } or { Firmware: not null } ? ", con las claves y el firmware del origen configurado." : "."));
         var opciones = new List<OpcionMenu> { new(opcion, d.Archivo, () => _ = ActualizarAsync(vm)) };
         if (d.PaginaNotas != null)
             opciones.Add(new("Ver los cambios", "Abre la página de la versión en el navegador", () => Menus.Abrir(d.PaginaNotas, null)));
@@ -257,7 +264,7 @@ public partial class PantallaEmuladores : UserControl, ISeccion
             Estado.GuardarConfig();
             _recargarBiblioteca = true;
 
-            if (Estado.Origen is { } origen)
+            if (Estado.OrigenPara(emulador) is { } origen && (origen.Claves != null || origen.Firmware != null))
             {
                 vm.TextoProgreso = "Instalando claves y firmware…";
                 var claves = await Task.Run(() => InstaladorClavesFirmware.Instalar(emulador, origen));
@@ -355,7 +362,7 @@ public partial class PantallaEmuladores : UserControl, ISeccion
             var c = vm.ClavesFirmware;
             var version = c?.FirmwareOrigen?.Version ?? c?.ClavesOrigen?.Version;
             opciones.Add(new(c?.AlDia == true ? "Claves y firmware al día" : $"Instalar claves y firmware {version}",
-                version == null ? "No hay claves ni firmware en tu carpeta" : c?.AlDia == true ? $"Ya tiene los de tu carpeta ({version})" : $"Desde tu carpeta, con respaldo de lo que tiene ahora · {vm.TextoClavesFirmware}",
+                version == null ? "El origen no tiene claves ni firmware para este emulador" : c?.AlDia == true ? $"Ya está al día ({version})" : $"Con respaldo de lo que tiene ahora · {vm.TextoClavesFirmware}",
                 () => _ = InstalarClavesFirmwareAsync(vm), deshabilitada: version == null || c?.AlDia == true || vm.Ocupado));
             if (InstaladorClavesFirmware.UltimoRespaldo(vm.Emulador.Id) is { } respaldoClaves)
                 opciones.Add(new("Volver a las claves y el firmware anteriores", $"Respaldo en {respaldoClaves}",

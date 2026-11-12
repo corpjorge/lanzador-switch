@@ -153,14 +153,15 @@ public sealed class AsignacionJugador
 }
 
 /// <summary>
-/// Claves y firmware: el lanzador no los descarga; los lee de una carpeta que elige el usuario
-/// (un prod.keys y un firmware en zip o en carpeta de .nca) y los instala en los emuladores.
+/// Origen de las claves y el firmware: una carpeta con archivos propios o con el agente Firma.
 /// </summary>
 public sealed class ConfigClavesFirmware
 {
     public string Carpeta { get; set; } = "";
 
-    /// <summary>Leer la carpeta al abrir el lanzador.</summary>
+    public bool UsarFirma { get; set; }
+
+    /// <summary>Consultar el origen al abrir el lanzador.</summary>
     public bool BuscarAlIniciar { get; set; } = true;
 
     /// <summary>Instalar solo las claves y el firmware nuevos en los emuladores cerrados.</summary>

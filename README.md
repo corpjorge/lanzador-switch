@@ -31,7 +31,7 @@ Es portable: no necesita instalar .NET ni nada más, y guarda su configuración 
 
 - Windows 10 u 11 de 64 bits.
 - Al menos un emulador: Eden, Ryujinx (Ryubing), Citron Neo o Suyu. Eden, Citron Neo y Suyu también se pueden instalar desde la sección Emuladores.
-- Tus juegos, claves y firmware, sacados de tu propia consola. **El lanzador no los incluye ni los descarga**; si quieres, copia a los emuladores los que tú pongas en una carpeta.
+- Tus juegos. Para las claves y el firmware, puedes indicar una carpeta con tus archivos o conectar una instalación aparte de [Firma](https://github.com/corpjorge/firma).
 - Un mando Xbox, PlayStation, Pro Controller o compatible (también se maneja con el teclado).
 - Opcional: [Claude Code](https://claude.com/claude-code) o Codex para traducir los nombres de los trucos.
 
