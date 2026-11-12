@@ -141,7 +141,15 @@ Cómo actualiza:
 
 ## Claves y firmware
 
-El lanzador **no descarga, no incluye y no instala** claves (`prod.keys`, `title.keys`) ni firmware. Cada emulador necesita los suyos, sacados de tu propia consola; se ponen con las opciones del propio emulador. El lanzador nunca toca las carpetas `user` ni `portable`, que es donde quedan.
+El lanzador **no descarga ni incluye** claves (`prod.keys`, `title.keys`) ni firmware. Cada emulador necesita los suyos, sacados de tu propia consola. Puedes ponerlos con las opciones de cada emulador o dejar que el lanzador los copie a todos:
+
+1. En **☰ → Configuración → Claves y firmware**, pulsa **Examinar…** y elige la carpeta donde guardas los tuyos. El lanzador busca ahí (hasta 4 subcarpetas) un `prod.keys`, con su `title.keys` si está al lado, y un firmware: un `.zip` con los `.nca` o una carpeta con ellos.
+2. **Revisar la carpeta al abrir el lanzador** la vuelve a leer en cada arranque. En la sección Emuladores, **X** la lee de nuevo.
+3. **Instalar solo las claves y el firmware nuevos** los copia a los emuladores cerrados cuando a un emulador le faltan o cuando los de tu carpeta son de una versión más nueva. Si un emulador está abierto, espera a que lo cierres.
+
+La versión se toma del nombre del archivo o de su carpeta (por ejemplo `20.1.0\prod.keys` o `Firmware 20.1.0.zip`). Si el nombre no la dice, se usa la fecha del archivo y el lanzador no reemplaza por su cuenta lo que el emulador ya tenga: lo instalas tú desde **Opciones (Y) → Instalar claves y firmware**.
+
+Solo se escribe en la carpeta de claves del emulador y en la de firmware de su NAND de sistema; partidas, juegos instalados y configuración no se tocan. Antes de reemplazar se guarda un respaldo en `datos\respaldos`, y **Opciones (Y) → Volver a las claves y el firmware anteriores** lo repone. Tu carpeta solo se lee.
 
 ## Internet y privacidad
 

@@ -204,14 +204,34 @@ public sealed class EmuladorVM(EmuladorConfig emulador, IFuenteActualizacion? fu
 
     public bool TieneAccion => TextoAccion.Length > 0;
 
-    /// <summary>El último respaldo, para volver a la versión anterior desde Opciones (Y).</summary>
-    public string TextoRespaldo => Respaldo is { } r ? $"Del {r.Fecha:dd/MM/yyyy HH:mm}" : "Sin respaldos todavía";
+    /// <summary>Claves y firmware instalados y lo que hay en la carpeta elegida; null mientras se lee.</summary>
+    public Lanzador.Core.ClavesFirmware.EstadoClavesFirmware? ClavesFirmware { get; set; }
 
-    public string DetalleRespaldo => Respaldo is { } r
-        ? $"Vuelve a {r.VersionAnterior ?? "la versión que tenías"} desde Opciones (Y)"
-        : "Se guarda uno antes de cada actualización";
+    public string TextoClavesFirmware => !Instalado ? "Se instalarán al descargar el emulador"
+        : ClavesFirmware == null ? "Leyendo…"
+        : ClavesFirmware.Resumen;
 
-    public string NivelRespaldo => Respaldo != null ? "ok" : "neutro";
+    public string DetalleClavesFirmware
+    {
+        get
+        {
+            if (!Instalado || ClavesFirmware is not { } c)
+                return "";
+            var version = c.FirmwareOrigen?.Version ?? c.ClavesOrigen?.Version;
+            if (version == null)
+                return Estado.Origen == null ? "Elige tu carpeta en Configuración → Claves y firmware" : "Tu carpeta no tiene claves ni firmware";
+            if (c.AlDia)
+                return $"Iguales a los de tu carpeta ({version})";
+            if (c.HayNuevas)
+                return $"Tu carpeta tiene {version}: se instalan con el emulador cerrado";
+            return $"Distintos a los de tu carpeta ({version}); se pueden instalar desde Opciones (Y)";
+        }
+    }
+
+    public string NivelClaves => !Instalado || ClavesFirmware == null ? "neutro"
+        : ClavesFirmware.AlDia ? "ok"
+        : ClavesFirmware.HayNuevas || !ClavesFirmware.HayClaves || ClavesFirmware.ArchivosFirmware == 0 ? "nuevo"
+        : "aviso";
 
     public static string NombreCanal(string canal) => canal switch
     {

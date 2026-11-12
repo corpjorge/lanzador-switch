@@ -1,4 +1,4 @@
-﻿using Lanzador.Core;
+using Lanzador.Core;
 using Lanzador.Core.IA;
 using Lanzador.Core.Trucos;
 
@@ -150,6 +150,7 @@ Comprobar(File.ReadAllText(habilitados).Trim() == "9F7EFC2FB9653E5C-<J1 - Veloci
 
 fallos += await PruebasActualizador.EjecutarAsync(temporal, eden, ryujinx);
 fallos += PruebasControles.Ejecutar(temporal, config);
+fallos += PruebasClavesFirmware.Ejecutar(temporal);
 
 if (args.Contains("--ia"))
 {

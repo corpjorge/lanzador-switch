@@ -89,6 +89,15 @@
                 </ComboBox>
                 <TextBlock Text="Las actualizaciones se hacen en la sección Emuladores (LB / RB desde Inicio)." Style="{StaticResource caption}" Margin="0,0,0,10"/>
 
+                <TextBlock Text="Claves y firmware" Style="{StaticResource title}" Margin="0,28,0,12"/>
+                <TextBlock Text="Carpeta con tus claves (prod.keys) y tu firmware (un zip o una carpeta con los .nca). El lanzador no los descarga." Style="{StaticResource caption}"/>
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Examinar…" Style="{StaticResource BotonPlano}" Margin="10,4,0,10" Click="AlExaminarClaves"/>
+                    <TextBox x:Name="CampoClaves" Style="{StaticResource Campo}"/>
+                </DockPanel>
+                <CheckBox x:Name="CasillaClavesAlIniciar" Content="Revisar la carpeta al abrir el lanzador (busca claves y firmware nuevos)" Style="{StaticResource Casilla}"/>
+                <CheckBox x:Name="CasillaClavesAutomatica" Content="Instalar solo las claves y el firmware nuevos en los emuladores cerrados (con respaldo)" Style="{StaticResource Casilla}"/>
+
                 <TextBlock Text="Sonido y movimiento" Style="{StaticResource title}" Margin="0,28,0,12"/>
                 <CheckBox x:Name="CasillaSonidos" Content="Sonidos al moverte, elegir y abrir un juego" Style="{StaticResource Casilla}"/>
                 <TextBlock Text="Volumen (← → para cambiarlo; suena al elegirlo)" Style="{StaticResource caption}"/>

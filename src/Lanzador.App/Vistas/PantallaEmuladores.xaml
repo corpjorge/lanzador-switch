@@ -32,7 +32,13 @@
 
         <StackPanel Margin="0,4,0,0">
             <TextBlock Style="{StaticResource caption}" TextWrapping="Wrap" TextTrimming="None"
-                       Text="Solo se reemplazan los archivos del emulador, con respaldo para volver atrás. Tus carpetas user y portable (partidas, claves, trucos y configuración) nunca se tocan."/>
+                       Text="Solo se reemplazan los archivos del emulador, con respaldo para volver atrás. Al actualizar, tus carpetas user y portable (partidas, trucos y configuración) no se tocan."/>
+            <Border Style="{StaticResource Chip}" Margin="0,10,0,0" HorizontalAlignment="Left" Background="{StaticResource accent-soft}">
+                <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="10" Height="10" Fill="{StaticResource focus}" VerticalAlignment="Center" Margin="0,1,8,0"/>
+                    <TextBlock x:Name="TextoOrigen" Style="{StaticResource chip}" TextTrimming="CharacterEllipsis" MaxWidth="1700"/>
+                </StackPanel>
+            </Border>
         </StackPanel>
 
         <ScrollViewer x:Name="Desplazador" Grid.Row="1" Margin="-24,0,-24,0" Padding="24,20,24,0" VerticalScrollBarVisibility="Hidden" Focusable="False">
@@ -87,12 +93,12 @@
                                             <TextBlock Text="{Binding TextoDisponibleCompleto}" Style="{StaticResource caption}" TextWrapping="Wrap" MaxHeight="44"/>
                                         </StackPanel>
                                         <StackPanel Grid.Column="2">
-                                            <TextBlock Text="RESPALDO" Style="{StaticResource label}"/>
+                                            <TextBlock Text="CLAVES Y FIRMWARE" Style="{StaticResource label}"/>
                                             <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                                                <Ellipse x:Name="PuntoRespaldo" Width="10" Height="10" Fill="{StaticResource ink-300}" VerticalAlignment="Center" Margin="0,2,10,0"/>
-                                                <TextBlock Text="{Binding TextoRespaldo}" Style="{StaticResource body-l}"/>
+                                                <Ellipse x:Name="PuntoClaves" Width="10" Height="10" Fill="{StaticResource ink-300}" VerticalAlignment="Center" Margin="0,2,10,0"/>
+                                                <TextBlock Text="{Binding TextoClavesFirmware}" Style="{StaticResource body-l}"/>
                                             </StackPanel>
-                                            <TextBlock Text="{Binding DetalleRespaldo}" Style="{StaticResource caption}" TextWrapping="Wrap" MaxHeight="44"/>
+                                            <TextBlock Text="{Binding DetalleClavesFirmware}" Style="{StaticResource caption}" TextWrapping="Wrap" MaxHeight="44"/>
                                         </StackPanel>
                                     </Grid>
 
@@ -126,8 +132,14 @@
                                 <Setter TargetName="ChipEstado" Property="Background" Value="{StaticResource danger-soft}"/>
                                 <Setter TargetName="PuntoEstado" Property="Fill" Value="{StaticResource danger-500}"/>
                             </DataTrigger>
-                            <DataTrigger Binding="{Binding NivelRespaldo}" Value="ok">
-                                <Setter TargetName="PuntoRespaldo" Property="Fill" Value="{StaticResource ok-500}"/>
+                            <DataTrigger Binding="{Binding NivelClaves}" Value="ok">
+                                <Setter TargetName="PuntoClaves" Property="Fill" Value="{StaticResource ok-500}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding NivelClaves}" Value="nuevo">
+                                <Setter TargetName="PuntoClaves" Property="Fill" Value="{StaticResource focus}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding NivelClaves}" Value="aviso">
+                                <Setter TargetName="PuntoClaves" Property="Fill" Value="{StaticResource warn-500}"/>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding Ocupado}" Value="True">
                                 <Setter TargetName="PanelProgreso" Property="Visibility" Value="Visible"/>

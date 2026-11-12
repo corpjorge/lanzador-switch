@@ -20,7 +20,7 @@ Lanzador estilo Big Picture para Windows que abre tus juegos de Switch con **Ede
 1. Descarga `LanzadorSwitch-<versión>-win-x64.zip` de la [última versión](https://github.com/corpjorge/lanzador-switch/releases/latest).
 2. Opcional: comprueba que llegó completo comparando su hash con `SHA256SUMS.txt`:
    ```powershell
-   Get-FileHash .\LanzadorSwitch-1.0.0-win-x64.zip -Algorithm SHA256
+   Get-FileHash .\LanzadorSwitch-1.1.0-win-x64.zip -Algorithm SHA256
    ```
 3. Descomprímelo en la carpeta donde tienes los emuladores, por ejemplo `C:\Switch`. Queda `C:\Switch\Lanzador\Lanzador.exe`, y el lanzador busca Eden, Ryujinx, Citron Neo y Suyu en `C:\Switch`.
 4. Abre `Lanzador.exe`. El ejecutable no está firmado, así que la primera vez Windows SmartScreen puede mostrar «Windows protegió su PC»: pulsa **Más información → Ejecutar de todas formas**.
@@ -31,7 +31,7 @@ Es portable: no necesita instalar .NET ni nada más, y guarda su configuración 
 
 - Windows 10 u 11 de 64 bits.
 - Al menos un emulador: Eden, Ryujinx (Ryubing), Citron Neo o Suyu. Eden, Citron Neo y Suyu también se pueden instalar desde la sección Emuladores.
-- Tus juegos, claves y firmware, sacados de tu propia consola. **El lanzador no los incluye, no los descarga y no los instala.**
+- Tus juegos, claves y firmware, sacados de tu propia consola. **El lanzador no los incluye ni los descarga**; si quieres, copia a los emuladores los que tú pongas en una carpeta.
 - Un mando Xbox, PlayStation, Pro Controller o compatible (también se maneja con el teclado).
 - Opcional: [Claude Code](https://claude.com/claude-code) o Codex para traducir los nombres de los trucos.
 

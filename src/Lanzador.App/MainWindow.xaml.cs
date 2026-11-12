@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -13,6 +13,7 @@ using Lanzador.App.Modelos;
 using Lanzador.App.Vistas;
 using Lanzador.Core;
 using Lanzador.Core.Actualizaciones;
+using Lanzador.Core.ClavesFirmware;
 using Lanzador.Core.IA;
 using Lanzador.App.Audio;
 
@@ -31,6 +32,9 @@ public partial class MainWindow : Window
     private bool _cerradoConMando;
     private string _comboUsado = Mando.TextoComboCerrar;
     private readonly EscuchaHid _escuchaHid = new();
+    private int _lecturaOrigen;
+    private bool _instalandoClaves;
+    private readonly HashSet<string> _avisadosClavesPendientes = new(StringComparer.OrdinalIgnoreCase);
     private readonly DispatcherTimer _reloj = new() { Interval = TimeSpan.FromSeconds(10) };
     private readonly DispatcherTimer _cerrarAudio = new() { Interval = TimeSpan.FromSeconds(2) };
     private readonly Dictionary<Seccion, FrameworkElement> _secciones = new();
@@ -89,10 +93,13 @@ public partial class MainWindow : Window
         _reloj.Tick += (_, _) => TextoReloj.Text = DateTime.Now.ToString("HH:mm");
         _reloj.Start();
         TextoReloj.Text = DateTime.Now.ToString("HH:mm");
+        Estado.AlCambiarOrigen += ActualizarChipClaves;
         Loaded += (_, _) =>
         {
             CrearPestanas();
             CambiarSeccion(Seccion.Inicio, 0);
+            if (Estado.Config.ClavesFirmware.BuscarAlIniciar)
+                _ = LeerCarpetaClavesAsync();
             _ = Catalogo.AsegurarAsync();
             // Mientras corre la intro se cargan los juegos y las carátulas detrás.
             if (Estado.Config.MostrarIntro && !ReducirMovimiento && Environment.GetEnvironmentVariable("LANZADOR_PRUEBA") == null)
@@ -331,6 +338,37 @@ public partial class MainWindow : Window
         });
     }
 
+    /// <summary>Chip de la cabecera con las claves y el firmware que hay en la carpeta elegida.</summary>
+    private void ActualizarChipClaves()
+    {
+        var origen = Estado.Origen;
+        if (origen == null && Estado.ErrorOrigen == null && !Estado.LeyendoOrigen)
+        {
+            ChipClaves.Visibility = Visibility.Collapsed;
+            return;
+        }
+        string texto, tono;
+        if (Estado.LeyendoOrigen)
+            (texto, tono) = ("Leyendo la carpeta de claves y firmware…", "info");
+        else if (origen == null)
+            (texto, tono) = ("No se pudo leer la carpeta de claves", "danger");
+        else if (origen.Claves == null && origen.Firmware == null)
+            (texto, tono) = ("La carpeta no tiene claves ni firmware", "warn");
+        else
+        {
+            var claves = origen.Claves?.Version;
+            var firmware = origen.Firmware?.Version;
+            texto = claves == firmware || claves == null || firmware == null
+                ? $"{(claves == null ? "Firmware" : firmware == null ? "Claves" : "Claves y firmware")} {claves ?? firmware}"
+                : $"Claves {claves} · firmware {firmware}";
+            tono = "ok";
+        }
+        TextoClaves.Text = texto;
+        ChipClaves.Background = (Brush)FindResource(tono == "info" ? "accent-soft" : tono + "-soft");
+        PuntoClaves.Fill = (Brush)FindResource(tono == "info" ? "focus" : tono + "-500");
+        ChipClaves.Visibility = Visibility.Visible;
+    }
+
     public void AbrirMenu(FrameworkElement menu)
     {
         Sonidos.Tocar(Sonido.Elegir);
@@ -528,7 +566,85 @@ public partial class MainWindow : Window
         _mando.Reiniciar();
         FijarEstado("");
         _ = FundirANegroAsync(false);
+
+        // Con el emulador ya cerrado se pueden instalar las claves o el firmware que quedaron pendientes.
+        _ = InstalarClavesAutomaticoAsync();
         return (codigo, DateTime.UtcNow - inicio);
+    }
+
+    /// <summary>
+    /// Lee la carpeta de claves y firmware elegida en Configuración (no descarga nada) y, si así se pidió,
+    /// instala lo nuevo en los emuladores cerrados.
+    /// </summary>
+    public async Task LeerCarpetaClavesAsync()
+    {
+        var lectura = ++_lecturaOrigen;
+        var config = Estado.Config.ClavesFirmware;
+        if (!config.Configurada)
+        {
+            (Estado.Origen, Estado.ErrorOrigen, Estado.LeyendoOrigen) = (null, null, false);
+            Estado.AvisarCambioOrigen();
+            return;
+        }
+
+        Estado.LeyendoOrigen = true;
+        Estado.AvisarCambioOrigen();
+        OrigenClavesFirmware? origen = null;
+        string? error = null;
+        try
+        {
+            var carpeta = config.Carpeta;
+            origen = await Task.Run(() => OrigenClavesFirmware.Leer(carpeta));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
+        {
+            error = ex is DirectoryNotFoundException ? ex.Message : $"No se pudo leer la carpeta de claves y firmware: {ex.Message}";
+        }
+        if (lectura != _lecturaOrigen)
+            return; // se pidió otra lectura mientras tanto
+        (Estado.Origen, Estado.ErrorOrigen, Estado.LeyendoOrigen) = (origen, error, false);
+        Estado.AvisarCambioOrigen();
+        if (origen != null)
+            _ = InstalarClavesAutomaticoAsync();
+    }
+
+    /// <summary>
+    /// Instala en los emuladores cerrados las claves y el firmware de la carpeta elegida que sean más nuevos que los instalados
+    /// (o que falten). Si un emulador está abierto, avisa y lo intenta al cerrarlo.
+    /// </summary>
+    public async Task InstalarClavesAutomaticoAsync()
+    {
+        if (_instalandoClaves || _procesoJuego != null || Estado.Origen is not { } origen || !Estado.Config.ClavesFirmware.InstalarAutomaticamente)
+            return;
+        _instalandoClaves = true;
+        try
+        {
+            foreach (var emulador in Estado.EmuladoresDisponibles.ToList())
+            {
+                var estado = await Task.Run(() => InstaladorClavesFirmware.Leer(emulador, origen));
+                if (!estado.HayNuevas)
+                    continue;
+                if (Actualizador.Bloqueo(emulador) != null)
+                {
+                    if (_avisadosClavesPendientes.Add(emulador.Id))
+                        Aviso($"Hay claves o firmware nuevos para {emulador.Nombre}; se instalarán cuando lo cierres.");
+                    continue;
+                }
+                Estado.CopiaEnCurso = $"se están instalando claves y firmware en {emulador.Nombre}";
+                FijarEstado($"Instalando claves y firmware en {emulador.Nombre}…");
+                var resultado = await Task.Run(() => InstaladorClavesFirmware.Instalar(emulador, origen));
+                Estado.CopiaEnCurso = null;
+                FijarEstado("");
+                _avisadosClavesPendientes.Remove(emulador.Id);
+                Aviso(resultado.Mensaje, !resultado.Exito);
+            }
+        }
+        finally
+        {
+            Estado.CopiaEnCurso = null;
+            _instalandoClaves = false;
+            Estado.AvisarCambioOrigen();
+        }
     }
 
     /// <summary>

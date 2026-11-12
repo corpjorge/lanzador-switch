@@ -2,7 +2,7 @@
 
 Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
 
-> **Estado:** pendiente de aprobación por SignPath Foundation. Hasta entonces las versiones publicadas, incluida la 1.0.0, **no están firmadas**. Cada release dice si su `Lanzador.exe` va firmado.
+> **Estado:** pendiente de aprobación por SignPath Foundation. Hasta entonces las versiones publicadas, incluidas la 1.0.0 y la 1.1.0, **no están firmadas**. Cada release dice si su `Lanzador.exe` va firmado.
 
 ## Qué se firma
 

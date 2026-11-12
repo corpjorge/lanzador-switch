@@ -36,6 +36,9 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         CasillaContenidoEnLinea.IsChecked = _copia.ContenidoEnLinea;
         Elegir(ComboCanalEden, _copia.Actualizaciones.CanalEden);
         Elegir(ComboVarianteCitron, _copia.Actualizaciones.VarianteCitron);
+        CampoClaves.Text = _copia.ClavesFirmware.Carpeta;
+        CasillaClavesAlIniciar.IsChecked = _copia.ClavesFirmware.BuscarAlIniciar;
+        CasillaClavesAutomatica.IsChecked = _copia.ClavesFirmware.InstalarAutomaticamente;
         CasillaSonidos.IsChecked = _copia.SonidosActivados;
         for (var v = 10; v <= 100; v += 10)
             ComboVolumen.Items.Add(new ComboBoxItem { Content = $"{v} %", Tag = v });
@@ -131,6 +134,15 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         ListaEmuladores.Items.Refresh();
     }
 
+    private void AlExaminarClaves(object sender, RoutedEventArgs e)
+    {
+        var dialogo = new OpenFolderDialog { Title = "Carpeta con tus claves y tu firmware" };
+        if (Directory.Exists(CampoClaves.Text.Trim().Trim('"')))
+            dialogo.InitialDirectory = CampoClaves.Text.Trim().Trim('"');
+        if (dialogo.ShowDialog() == true)
+            CampoClaves.Text = dialogo.FolderName;
+    }
+
     private void AlExaminarDatos(object sender, RoutedEventArgs e)
     {
         if (EmuladorDe(sender) is not { } emulador)
@@ -220,6 +232,11 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         foreach (var emulador in _copia.Emuladores)
             emulador.RutaExe = emulador.RutaExe.Trim().Trim('"');
 
+        _copia.ClavesFirmware.Carpeta = CampoClaves.Text.Trim().Trim('"');
+        _copia.ClavesFirmware.BuscarAlIniciar = CasillaClavesAlIniciar.IsChecked == true;
+        _copia.ClavesFirmware.InstalarAutomaticamente = CasillaClavesAutomatica.IsChecked == true;
+        var clavesCambiaron = JsonSerializer.Serialize(_copia.ClavesFirmware) != JsonSerializer.Serialize(Estado.Config.ClavesFirmware);
+
         var carpetasCambiaron = !_copia.CarpetasJuegos.SequenceEqual(Estado.Config.CarpetasJuegos, StringComparer.OrdinalIgnoreCase);
         var emuladoresCambiaron = JsonSerializer.Serialize(_copia.Emuladores) != JsonSerializer.Serialize(Estado.Config.Emuladores);
         var descargasActivadas = _copia.ContenidoEnLinea && !Http.ContenidoEnLinea;
@@ -227,6 +244,8 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         Estado.ErrorIA = null;
         Estado.GuardarConfig();
         MainWindow.Actual.AplicarPreferencias();
+        if (clavesCambiaron)
+            _ = MainWindow.Actual.LeerCarpetaClavesAsync();
 
         var ventana = MainWindow.Actual;
         if (ventana.EnPantallaCompleta != _copia.PantallaCompleta)

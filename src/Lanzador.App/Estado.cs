@@ -1,5 +1,6 @@
 using Lanzador.App.Modelos;
 using Lanzador.Core;
+using Lanzador.Core.ClavesFirmware;
 using Lanzador.Core.IA;
 
 namespace Lanzador.App;
@@ -23,6 +24,19 @@ public static class Estado
 
     /// <summary>Mientras se copian o restauran archivos de un emulador: no se deja cerrar el lanzador.</summary>
     public static string? CopiaEnCurso { get; set; }
+
+    /// <summary>Lo que hay en la carpeta de claves y firmware elegida; null si no hay carpeta o no se ha leído.</summary>
+    public static OrigenClavesFirmware? Origen { get; set; }
+
+    /// <summary>Por qué no se pudo leer la carpeta la última vez, o null.</summary>
+    public static string? ErrorOrigen { get; set; }
+
+    /// <summary>Se está leyendo la carpeta.</summary>
+    public static bool LeyendoOrigen { get; set; }
+
+    public static event Action? AlCambiarOrigen;
+
+    public static void AvisarCambioOrigen() => AlCambiarOrigen?.Invoke();
 
     public static IEnumerable<EmuladorConfig> EmuladoresDisponibles => Config.Emuladores.Where(e => e.Disponible);
 

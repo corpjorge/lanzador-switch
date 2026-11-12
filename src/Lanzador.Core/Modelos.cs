@@ -100,6 +100,9 @@ public sealed class Configuracion
     /// <summary>Ya se respondió el aviso de conexiones a internet que sale la primera vez.</summary>
     public bool AvisoPrivacidadVisto { get; set; }
 
+    /// <summary>La carpeta del usuario con sus claves y su firmware, para instalarlos en los emuladores.</summary>
+    public ConfigClavesFirmware ClavesFirmware { get; set; } = new();
+
     /// <summary>Emulador donde se configuran los mandos; desde él se copian a los demás (y a los que se instalen).</summary>
     public string OrigenControles { get; set; } = "eden";
 
@@ -147,6 +150,23 @@ public sealed class AsignacionJugador
 
     /// <summary>Mapeo de SDL del mando (solo hace falta para mandos que no son XInput ni HIDAPI).</summary>
     public string? Mapeo { get; set; }
+}
+
+/// <summary>
+/// Claves y firmware: el lanzador no los descarga; los lee de una carpeta que elige el usuario
+/// (un prod.keys y un firmware en zip o en carpeta de .nca) y los instala en los emuladores.
+/// </summary>
+public sealed class ConfigClavesFirmware
+{
+    public string Carpeta { get; set; } = "";
+
+    /// <summary>Leer la carpeta al abrir el lanzador.</summary>
+    public bool BuscarAlIniciar { get; set; } = true;
+
+    /// <summary>Instalar solo las claves y el firmware nuevos en los emuladores cerrados.</summary>
+    public bool InstalarAutomaticamente { get; set; } = true;
+
+    [JsonIgnore] public bool Configurada => !string.IsNullOrWhiteSpace(Carpeta);
 }
 
 /// <summary>De dónde se descargan las actualizaciones de cada emulador.</summary>
