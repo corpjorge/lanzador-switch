@@ -32,7 +32,8 @@ if ($Fase -in 'Todo', 'Publicar') {
         -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
         -p:DebugType=none -o $carpeta
     if ($LASTEXITCODE -ne 0) { throw "dotnet publish falló ($LASTEXITCODE)" }
-    Copy-Item (Join-Path $raiz 'LICENSE'), (Join-Path $raiz 'THIRD-PARTY-NOTICES.md'), (Join-Path $raiz 'LEEME.md') $carpeta
+    Copy-Item (Join-Path $raiz 'LICENSE'), (Join-Path $raiz 'THIRD-PARTY-NOTICES.md'), (Join-Path $raiz 'LEEME.md'),
+        (Join-Path $PSScriptRoot 'Crear-acceso-directo.ps1') $carpeta
 }
 
 if ($Fase -in 'Todo', 'Comprimir') {

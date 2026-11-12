@@ -4,6 +4,8 @@ Lanzador estilo Big Picture para abrir tus juegos con **Eden**, **Ryujinx**, **C
 
 **Para abrirlo:** `Lanzador.exe` (en la carpeta del ZIP descargado, o en `app\` si lo compilaste tú).
 
+Para crear o actualizar un acceso directo en el Escritorio, abre PowerShell en la carpeta extraída y ejecuta `.\Crear-acceso-directo.ps1`. Usa `-Nombre Switch` para elegir el nombre y `-Icono "C:\ruta\Switch.ico"` para usar tu propio icono.
+
 ## Cómo se usa
 
 Arriba están las secciones **Inicio · Biblioteca · Emuladores · Controles**. Se cambia de sección con **LB / RB** (Q / E en el teclado). B en cualquier sección vuelve a Inicio.
