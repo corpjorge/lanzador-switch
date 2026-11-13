@@ -122,6 +122,8 @@ public static class Menus
     /// </summary>
     public static void Jugar(JuegoVM juego)
     {
+        if (OfrecerConversion(juego))
+            return;
         var emuladores = Estado.EmuladoresDisponibles.ToList();
         if (emuladores.Count == 1)
             _ = MainWindow.Actual.JugarAsync(juego, emuladores[0]);
@@ -131,6 +133,8 @@ public static class Menus
 
     public static void ElegirEmulador(JuegoVM juego)
     {
+        if (OfrecerConversion(juego))
+            return;
         var emuladores = Estado.EmuladoresDisponibles.ToList();
         if (emuladores.Count == 0)
         {
@@ -146,6 +150,28 @@ public static class Menus
                 () => _ = MainWindow.Actual.JugarAsync(juego, e),
                 icono: Tema.IconosEmulador.De(e)));
         MainWindow.Actual.AbrirMenu(new MenuEmergente(juego.Nombre, "¿Con qué emulador lo abres?", opciones));
+    }
+
+    /// <summary>
+    /// Un juego comprimido (.nsz o .xcz) no se puede abrir en los emuladores: en vez de jugar, se ofrece convertirlo.
+    /// True si el juego estaba comprimido (y ya se mostró el aviso).
+    /// </summary>
+    public static bool OfrecerConversion(JuegoVM juego)
+    {
+        if (!juego.Comprimido)
+            return false;
+        if (juego.Formato != "NSZ")
+        {
+            MainWindow.Actual.Aviso($"{juego.Nombre} está en formato {juego.Formato}: los emuladores no lo abren y el lanzador todavía no lo convierte. Conviértelo a XCI con la herramienta nsz.", true);
+            return true;
+        }
+        MainWindow.Actual.AbrirMenu(new MenuEmergente(juego.Nombre,
+            "Este juego está comprimido (NSZ) y los emuladores no lo abren así. Conviértelo a NSP: el .nsz no se toca y, cuando el .nsp quede verificado, podrás borrarlo.",
+        [
+            new OpcionMenu("Convertir a NSP", System.IO.Path.GetFileName(juego.Juego.RutaArchivo), () => MainWindow.Actual.Mostrar(new PantallaConversion(juego.Juego.RutaArchivo))),
+            new OpcionMenu("Ahora no", null, null),
+        ]));
+        return true;
     }
 
     public static void AbrirTrucos(JuegoVM juego, string? emuladorId = null)

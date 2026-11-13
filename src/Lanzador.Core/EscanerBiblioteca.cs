@@ -22,7 +22,8 @@ public static partial class EscanerBiblioteca
         var sinId = new List<Juego>();
         var actualizaciones = new List<(string BaseId, ArchivoActualizacion Archivo)>();
 
-        foreach (var ruta in archivos.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(EnCarpetaExtra))
+        // Si un juego está en .nsp/.xci y también comprimido (.nsz/.xcz), se queda el que los emuladores pueden abrir.
+        foreach (var ruta in archivos.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(EnCarpetaExtra).ThenBy(EsComprimido))
         {
             var nombreArchivo = Path.GetFileNameWithoutExtension(ruta);
             var (version, versionTexto) = LeerVersion(nombreArchivo);
@@ -109,6 +110,9 @@ public static partial class EscanerBiblioteca
         limpio = RxEspacios().Replace(limpio, " ").Trim(' ', '+', '-');
         return limpio.Length > 0 ? limpio : nombreArchivo;
     }
+
+    private static bool EsComprimido(string ruta) =>
+        Path.GetExtension(ruta).Equals(".nsz", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(ruta).Equals(".xcz", StringComparison.OrdinalIgnoreCase);
 
     private static bool EnCarpetaExtra(string ruta)
     {

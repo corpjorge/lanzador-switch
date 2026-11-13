@@ -24,8 +24,12 @@ public partial class PantallaConversion : UserControl, IPantalla
     private bool _buscando;
     private bool _cambios;
 
-    public PantallaConversion()
+    private readonly string? _rutaInicial;
+
+    /// <param name="rutaInicial">El .nsz que debe quedar elegido al abrir (p. ej. el del juego desde el que se llegó).</param>
+    public PantallaConversion(string? rutaInicial = null)
     {
+        _rutaInicial = rutaInicial;
         InitializeComponent();
         Loaded += async (_, _) =>
         {
@@ -96,7 +100,7 @@ public partial class PantallaConversion : UserControl, IPantalla
             ? "No hay carpetas de juegos configuradas. Agrégalas en ☰ → Configuración."
             : "No hay juegos .nsz en tus carpetas de juegos: no hay nada que convertir.";
         TextoVacio.Visibility = _archivos.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        Seleccionar(0);
+        Seleccionar(Math.Max(0, _archivos.FindIndex(a => a.Archivo.Ruta.Equals(_rutaInicial, StringComparison.OrdinalIgnoreCase))));
         ActualizarResumen();
     }
 

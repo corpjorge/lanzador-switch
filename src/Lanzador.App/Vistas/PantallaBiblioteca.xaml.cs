@@ -16,7 +16,7 @@ public partial class PantallaBiblioteca : UserControl, ISeccion
     private const double AnchoCelda = 200 + 24;
     private const double AltoCelda = 200 + 12 + 22 + 36;
 
-    private enum Filtro { Todos, Favoritos, Jugados, JugablesRyubing, SinCalificar }
+    private enum Filtro { Todos, Favoritos, Jugados, JugablesRyubing, SinCalificar, PorConvertir }
 
     private List<JuegoVM> _visibles = new();
     private Filtro _filtro = Filtro.Todos;
@@ -90,6 +90,7 @@ public partial class PantallaBiblioteca : UserControl, ISeccion
         Filtro.Jugados => "Jugados",
         Filtro.JugablesRyubing => "Jugables en Ryubing",
         Filtro.SinCalificar => "Sin calificar",
+        Filtro.PorConvertir => "Por convertir (NSZ)",
         _ => "Todos",
     };
 
@@ -102,6 +103,7 @@ public partial class PantallaBiblioteca : UserControl, ISeccion
             Filtro.Jugados => preferencias?.UltimaVez != null,
             Filtro.JugablesRyubing => juego.Compat is { Nivel: >= 4 },
             Filtro.SinCalificar => preferencias == null || preferencias.Calificaciones.Values.All(c => c == Calificacion.SinProbar),
+            Filtro.PorConvertir => juego.Comprimido,
             _ => true,
         };
     }

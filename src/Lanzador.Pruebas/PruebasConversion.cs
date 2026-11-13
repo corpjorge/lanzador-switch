@@ -95,6 +95,17 @@ static class PruebasConversion
                   && encontrados.Single(a => a.Ruta.EndsWith("no-es.nsz")).Estado == EstadoComprimido.Danado && encontrados.Any(a => a.Estado == EstadoComprimido.Convertible),
             "Buscar: lista los convertibles, los ya convertidos, los .xcz (no compatibles) y los dañados");
 
+        Console.WriteLine("\n== Biblioteca: juegos comprimidos");
+        var biblioteca = Path.Combine(temporal, "biblioteca-nsz");
+        Directory.CreateDirectory(biblioteca);
+        foreach (var nombre in new[] { "Solo NSZ [0100AAAA00001000][v0].nsz", "Los dos [0100BBBB00002000][v0].nsz", "Los dos [0100BBBB00002000][v0].nsp", "Normal [0100CCCC00003000][v0].xci" })
+            File.WriteAllBytes(Path.Combine(biblioteca, nombre), []);
+        var escaneados = Lanzador.Core.EscanerBiblioteca.Escanear([biblioteca]).ToDictionary(j => j.TitleId);
+        Comprobar(escaneados.Count == 3 && escaneados["0100AAAA00001000"].Comprimido && !escaneados["0100CCCC00003000"].Comprimido,
+            "Un juego que solo está en .nsz aparece marcado como comprimido");
+        Comprobar(escaneados["0100BBBB00002000"] is { Comprimido: false } ambos && ambos.RutaArchivo.EndsWith(".nsp"),
+            "Si el juego está en .nsz y en .nsp, se usa el .nsp");
+
         Console.WriteLine("\n== Conversión NSZ → NSP: tus .nsz reales (sobre copias, los originales solo se leen)");
         var reales = ConversorNsz.Buscar(carpetasJuegos).Where(a => a.Ruta.EndsWith(".nsz", StringComparison.OrdinalIgnoreCase)).OrderBy(a => a.Tamano).Take(2).ToList();
         if (reales.Count == 0)

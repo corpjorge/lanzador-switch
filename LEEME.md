@@ -176,6 +176,8 @@ La carpeta `datos` no se toca. Si el release no trae instalador (versiones hasta
 | Convertido y verificado | El `.nsp` está completo | Enviar el `.nsz` a la papelera (pregunta antes) |
 | No compatible | Los `.xcz` todavía no se convierten aquí | — |
 
+**En Inicio y Biblioteca**, un juego que solo está en `.nsz` lleva la etiqueta **NSZ · convertir** y no se puede abrir: los emuladores no leen ese formato. A sobre él ofrece **Convertir a NSP** y abre esta pantalla con ese juego elegido; al terminar, la biblioteca pasa a usar el `.nsp`. Si un juego está en `.nsz` y en `.nsp`, se muestra el `.nsp`. El filtro **Por convertir (NSZ)** de Biblioteca los junta.
+
 **X** convierte todos los que faltan, uno tras otro; **Y** abre las opciones; **B** cancela una conversión en curso.
 
 - El `.nsp` se crea en la misma carpeta que el `.nsz`, primero como `.nsp.parcial`; solo recibe su nombre definitivo si pasa la verificación.

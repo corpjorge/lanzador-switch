@@ -208,6 +208,9 @@ public sealed class Juego
 
     public bool TieneTitleId => TitleId.Length == 16;
 
+    /// <summary>Archivo comprimido (.nsz o .xcz): los emuladores no lo abren; hay que convertirlo antes.</summary>
+    public bool Comprimido => Path.GetExtension(RutaArchivo) is { } e && (e.Equals(".nsz", StringComparison.OrdinalIgnoreCase) || e.Equals(".xcz", StringComparison.OrdinalIgnoreCase));
+
     /// <summary>Clave para guardar preferencias: el Title ID o, si no hay, la ruta.</summary>
     public string Clave => TieneTitleId ? TitleId : RutaArchivo;
 }

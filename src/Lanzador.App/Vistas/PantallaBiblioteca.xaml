@@ -51,6 +51,13 @@
                                     </Border>
                                 </Grid>
                                 <Border x:Name="Marco" CornerRadius="{StaticResource radius-lg}" BorderBrush="{StaticResource line-100}" BorderThickness="1"/>
+                                <!-- Juego comprimido (.nsz/.xcz): no se puede abrir hasta convertirlo -->
+                                <Border x:Name="Comprimido" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10" Padding="10,4" CornerRadius="{StaticResource radius-sm}"
+                                        Background="{StaticResource warn-500}" Visibility="Collapsed">
+                                    <TextBlock FontFamily="{StaticResource font-text}" FontWeight="SemiBold" FontSize="14" Foreground="{StaticResource bg-000}">
+                                        <Run Text="{Binding Formato, Mode=OneWay}"/><Run Text=" · convertir"/>
+                                    </TextBlock>
+                                </Border>
                             </Grid>
                             <TextBlock x:Name="Nombre" Text="{Binding Nombre}" FontFamily="{StaticResource font-text}" FontSize="17" LineHeight="22"
                                        Foreground="{StaticResource ink-200}" TextTrimming="CharacterEllipsis" Margin="0,12,0,0">
@@ -60,6 +67,10 @@
                             </TextBlock>
                         </StackPanel>
                         <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Comprimido}" Value="True">
+                                <Setter TargetName="Comprimido" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="Arte" Property="Opacity" Value="0.75"/>
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding SinIcono}" Value="True">
                                 <Setter TargetName="Iniciales" Property="Visibility" Value="Visible"/>
                             </DataTrigger>

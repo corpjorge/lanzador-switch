@@ -195,6 +195,8 @@ public partial class PantallaJuego : UserControl, IPantalla
     private void ActualizarChips()
     {
         PanelChips.Children.Clear();
+        if (_juego.Comprimido)
+            PanelChips.Children.Add(Chips.Crear($"Comprimido ({_juego.Formato}): hay que convertirlo para jugar", Tono.Aviso));
         var preferencias = Estado.Config.Juegos.GetValueOrDefault(_juego.Juego.Clave);
         if (Estado.Config.Emulador(preferencias?.EmuladorPreferido) is { } preferido)
             PanelChips.Children.Add(Chips.Crear($"Preferido: {preferido.Nombre}", Tono.Neutro, estrella: true));
@@ -267,7 +269,7 @@ public partial class PantallaJuego : UserControl, IPantalla
             };
             ListaEmuladores.Children.Add(pastilla);
         }
-        TextoJugar.Text = $"Jugar con {_emuladores[_emulador].Nombre}";
+        TextoJugar.Text = _juego.Comprimido ? "Convertir a NSP" : $"Jugar con {_emuladores[_emulador].Nombre}";
     }
 
     private void ActualizarCalificacion()

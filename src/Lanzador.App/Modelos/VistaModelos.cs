@@ -39,6 +39,12 @@ public sealed class JuegoVM(Juego juego) : Observable
 
     public ImageSource? Icono { get => _icono; set { if (Fijar(ref _icono, value)) Avisar(nameof(SinIcono)); } }
     public bool SinIcono => _icono == null;
+
+    /// <summary>El archivo es .nsz o .xcz: no se puede jugar hasta convertirlo.</summary>
+    public bool Comprimido => Juego.Comprimido;
+
+    /// <summary>"NSZ" o "XCZ", para la etiqueta de la carátula.</summary>
+    public string Formato => Path.GetExtension(Juego.RutaArchivo).TrimStart('.').ToUpperInvariant();
     public bool Seleccionado { get => _seleccionado; set => Fijar(ref _seleccionado, value); }
     public EntradaCompatibilidad? Compat { get => _compat; set => Fijar(ref _compat, value); }
 

@@ -302,7 +302,10 @@ public partial class PantallaInicio : UserControl, ISeccion
             detalle.Add(habitual.Nombre);
         detalle.Add(preferencias?.UltimaVez is { } cuando ? "Jugado " + Hace(cuando) : "Sin jugar todavía");
         TextoDetalle.Text = string.Join(" · ", detalle).ToUpper(CultureInfo.CurrentCulture);
-        TextoJugar.Text = "Jugar"; // A pregunta con qué emulador (el preferido primero)
+        // A pregunta con qué emulador (el preferido primero); un juego comprimido primero hay que convertirlo.
+        TextoJugar.Text = juego.Comprimido ? "Convertir a NSP" : "Jugar";
+        if (juego.Comprimido)
+            PanelChips.Children.Add(Chips.Crear($"Comprimido ({juego.Formato}): hay que convertirlo para jugar", Tono.Aviso));
 
         if (preferido != null)
             PanelChips.Children.Add(Chips.Crear($"Preferido: {preferido.Nombre}", Tono.Neutro, estrella: true));

@@ -494,6 +494,8 @@ public partial class MainWindow : Window
     /// <summary>Abre el juego, esconde el lanzador mientras se juega y vuelve al cerrar el emulador.</summary>
     public async Task JugarAsync(JuegoVM juego, EmuladorConfig emulador)
     {
+        if (Menus.OfrecerConversion(juego))
+            return;
         Sonidos.Tocar(Sonido.Lanzar);
         var tecla = TeclaTrucos;
         TextoTeclaTrucos.Text = tecla != null ? $"Durante el juego, {tecla} muestra tus trucos activos." : "";
