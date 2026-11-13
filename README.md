@@ -50,7 +50,7 @@ No necesita instalar .NET ni nada más. Guarda su configuración en la carpeta `
 | A | Enter | Jugar (pregunta con qué emulador; el preferido va primero) |
 | X | T | Trucos del juego |
 | Y | O | Página del juego / opciones |
-| ☰ | M | Menú: configuración, convertir NSZ a NSP, buscar actualizaciones, volver a buscar juegos, pantalla completa, salir |
+| ☰ | M | Menú: configuración, convertir NSZ a NSP, buscar actualizaciones, volver a buscar juegos, pantalla completa, cerrar el lanzador |
 | B | Esc | Volver |
 | — | F7 | Durante el juego: mostrar u ocultar los trucos activos |
 

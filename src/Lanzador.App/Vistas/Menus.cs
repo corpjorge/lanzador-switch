@@ -98,9 +98,7 @@ public static class Menus
         var ventana = MainWindow.Actual;
         return new MenuEmergente("Menú", null,
         [
-            new("Configuración", "Emuladores, carpetas de juegos e IA para traducir", () => ventana.Mostrar(new PantallaConfiguracion())),
-            new("Emuladores", "Versiones, actualizaciones, claves y firmware de Eden, Ryujinx, Citron Neo y Suyu", () => ventana.IrASeccion(Seccion.Emuladores)),
-            new("Controles", "Configura los mandos una vez y cópialos a todos los emuladores", () => ventana.IrASeccion(Seccion.Controles)),
+            new("Configuración", "Rutas de los emuladores, carpetas de juegos y de actualizaciones, sonido e IA", () => ventana.Mostrar(new PantallaConfiguracion())),
             new("Convertir juegos NSZ a NSP", "Descomprime tus juegos .nsz, los verifica y te deja borrar el original", () => ventana.Mostrar(new PantallaConversion())),
             new("Buscar actualizaciones", $"Del lanzador (tienes la {Lanzador.Core.Actualizaciones.ActualizacionLanzador.VersionActual.ToString(3)}) y de los emuladores instalados",
                 () => _ = ventana.BuscarActualizacionesAsync(true)),
@@ -112,7 +110,7 @@ public static class Menus
                 Estado.Config.PantallaCompleta = ventana.EnPantallaCompleta;
                 Estado.GuardarConfig();
             }),
-            new("Salir", null, () => Application.Current.Shutdown()),
+            new("Cerrar el lanzador", "Sale de Lanzador Switch", () => ventana.Close()),
         ]);
     }
 

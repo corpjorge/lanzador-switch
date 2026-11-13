@@ -20,7 +20,7 @@
                 <TextBlock x:Name="TextoSubtitulo" Grid.Row="1" FontFamily="{StaticResource font-text}" FontSize="18" LineHeight="26"
                            Foreground="{StaticResource ink-200}" TextWrapping="Wrap" Margin="0,12,0,0"/>
                 <ScrollViewer x:Name="Desplazador" Grid.Row="2" Margin="-24,-12,-24,-32" Padding="24,24,24,20"
-                              VerticalScrollBarVisibility="Hidden" Focusable="False">
+                              VerticalScrollBarVisibility="Hidden" Focusable="False" ScrollChanged="AlDesplazar">
                     <ItemsControl x:Name="ListaOpciones" Focusable="False">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
@@ -94,6 +94,11 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
+                <!-- Hay más opciones abajo de las que caben -->
+                <Border x:Name="MasAbajo" Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,-22" Padding="14,3"
+                        CornerRadius="{StaticResource radius-sm}" Background="{StaticResource surface-300}" IsHitTestVisible="False" Visibility="Collapsed">
+                    <TextBlock Text="▼  más opciones" FontFamily="{StaticResource font-text}" FontSize="15" Foreground="{StaticResource ink-100}"/>
+                </Border>
             </Grid>
         </Grid>
     </Grid>

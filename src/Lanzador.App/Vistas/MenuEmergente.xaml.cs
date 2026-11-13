@@ -123,5 +123,9 @@ public partial class MenuEmergente : UserControl, IPantalla
             Elegir(_opciones.IndexOf(opcion));
     }
 
+    /// <summary>Si la lista no cabe entera, avisa de que sigue hacia abajo.</summary>
+    private void AlDesplazar(object sender, ScrollChangedEventArgs e) =>
+        MasAbajo.Visibility = Desplazador.ScrollableHeight - Desplazador.VerticalOffset > 8 ? Visibility.Visible : Visibility.Collapsed;
+
     private void AlPulsarFondo(object sender, MouseButtonEventArgs e) => Cancelar();
 }

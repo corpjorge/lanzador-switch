@@ -17,7 +17,7 @@ Arriba están las secciones **Inicio · Biblioteca · Emuladores · Controles**.
 | X | T | Trucos | Trucos | Trucos | Volver a descargar los trucos |
 | Y | O | Página del juego (más opciones) | Cambiar de filtro | Favorito sí / no | Traducir de nuevo |
 | Vista | V | — | — | — | Apagar todos los trucos activos de un golpe, o volver a encender exactamente los que estaban (ni uno más) |
-| ☰ (Menú) | M | Menú: configuración, convertir NSZ a NSP, buscar actualizaciones, recargar, pantalla completa, salir | Menú | Más (preferido, carpeta, tinfoil.io) | Aplicar cambios |
+| ☰ (Menú) | M | Menú: configuración, convertir NSZ a NSP, buscar actualizaciones, recargar, pantalla completa, cerrar el lanzador | Menú | Más (preferido, carpeta, tinfoil.io) | Aplicar cambios |
 | LB / RB | Q / E | Sección | Sección | Cambiar de emulador | Cambiar de emulador |
 | Cruceta / stick | Flechas | Moverse por las filas | Moverse por la cuadrícula | Moverse por las filas | Moverse; en la fila de versión, ← → cambia la versión |
 | — | F11 | Pantalla completa / ventana | | | |
