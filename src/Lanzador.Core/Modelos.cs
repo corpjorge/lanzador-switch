@@ -66,6 +66,19 @@ public sealed class Configuracion
     public List<EmuladorConfig> Emuladores { get; set; } = new();
     public List<string> CarpetasJuegos { get; set; } = new();
 
+    /// <summary>
+    /// Carpetas de actualizaciones y DLC: el lanzador las da de alta en los emuladores que las cargan solos
+    /// (Eden, Citron y Ryujinx) y también busca en ellas los archivos por convertir.
+    /// </summary>
+    public List<string> CarpetasContenido { get; set; } = new();
+
+    /// <summary>Ya se tomaron una vez las carpetas de contenido que tenían los emuladores.</summary>
+    public bool ContenidoDetectado { get; set; }
+
+    /// <summary>Todo lo que se recorre al buscar juegos y archivos comprimidos.</summary>
+    [JsonIgnore]
+    public List<string> CarpetasEscaneo => GestorConfiguracion.NormalizarCarpetas(CarpetasJuegos.Concat(CarpetasContenido));
+
     /// <summary>"claude", "codex" o "ninguno". Sin elegir no se traduce: traducir envía nombres a Anthropic u OpenAI.</summary>
     public string MotorIA { get; set; } = "ninguno";
 

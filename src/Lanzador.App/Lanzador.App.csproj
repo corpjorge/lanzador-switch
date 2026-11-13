@@ -26,7 +26,7 @@
     <AssemblyName>Lanzador</AssemblyName>
     <RootNamespace>Lanzador.App</RootNamespace>
     <Product>Lanzador Switch</Product>
-    <Version>1.2.1</Version>
+    <Version>1.2.2</Version>
     <!-- La versión de producto queda sin "+<commit>": SignPath la compara al firmar. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Copyright>Copyright (c) 2026 corpjorge · MIT</Copyright>

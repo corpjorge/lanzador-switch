@@ -19,6 +19,7 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
 {
     private readonly Configuracion _copia;
     private readonly ObservableCollection<string> _carpetas;
+    private readonly ObservableCollection<string> _contenido;
 
     public PantallaConfiguracion()
     {
@@ -30,6 +31,8 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
         ListaEmuladores.ItemsSource = _copia.Emuladores;
         _carpetas = new ObservableCollection<string>(_copia.CarpetasJuegos);
         ListaCarpetas.ItemsSource = _carpetas;
+        _contenido = new ObservableCollection<string>(_copia.CarpetasContenido);
+        ListaContenido.ItemsSource = _contenido;
         ComboMotor.SelectedItem = ComboMotor.Items.Cast<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == _copia.MotorIA) ?? ComboMotor.Items[0];
         CampoModelo.Text = _copia.ModeloIA;
         CasillaPantallaCompleta.IsChecked = _copia.PantallaCompleta;
@@ -175,6 +178,29 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
             _carpetas.Remove(carpeta);
     }
 
+    private void AlAgregarContenido(object sender, RoutedEventArgs e)
+    {
+        var dialogo = new OpenFolderDialog { Title = "Carpeta con actualizaciones o DLC", Multiselect = true };
+        if (dialogo.ShowDialog() != true)
+            return;
+        foreach (var carpeta in dialogo.FolderNames)
+            if (!_contenido.Contains(carpeta, StringComparer.OrdinalIgnoreCase))
+                _contenido.Add(carpeta);
+    }
+
+    private void AlQuitarContenido(object sender, RoutedEventArgs e)
+    {
+        if (ListaContenido.SelectedItem is string carpeta)
+            _contenido.Remove(carpeta);
+    }
+
+    private void AlDetectarContenido(object sender, RoutedEventArgs e)
+    {
+        foreach (var carpeta in GestorConfiguracion.DetectarCarpetasContenido(_copia))
+            if (!_contenido.Contains(carpeta, StringComparer.OrdinalIgnoreCase))
+                _contenido.Add(carpeta);
+    }
+
     private void AlDetectarCarpetas(object sender, RoutedEventArgs e)
     {
         foreach (var carpeta in GestorConfiguracion.DetectarCarpetasJuegos(_copia))
@@ -221,6 +247,10 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
     private void AlGuardar(object sender, RoutedEventArgs e)
     {
         _copia.CarpetasJuegos = GestorConfiguracion.NormalizarCarpetas(_carpetas);
+        var contenido = _contenido.Select(c => c.Trim().Trim('"')).Where(c => c.Length > 2 && Directory.Exists(c)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var contenidoCambio = !contenido.SequenceEqual(Estado.Config.CarpetasContenido, StringComparer.OrdinalIgnoreCase);
+        _copia.CarpetasContenido = contenido;
+        _copia.ContenidoDetectado = true;
         _copia.MotorIA = MotorElegido;
         _copia.ModeloIA = CampoModelo.Text.Trim();
         _copia.PantallaCompleta = CasillaPantallaCompleta.IsChecked == true;
@@ -259,10 +289,19 @@ public partial class PantallaConfiguracion : UserControl, IPantalla
             ventana.PonerPantallaCompleta(_copia.PantallaCompleta);
         ventana.Volver();
         ventana.Aviso("Configuración guardada.");
-        if (carpetasCambiaron || emuladoresCambiaron)
+        if (contenidoCambio)
+            _ = AplicarContenidoAsync(ventana);
+        if (carpetasCambiaron || emuladoresCambiaron || contenidoCambio)
             _ = Catalogo.CargarAsync(false);
         else if (descargasActivadas)
             _ = Catalogo.DescargarFaltantesAsync();
+    }
+
+    private static async Task AplicarContenidoAsync(MainWindow ventana)
+    {
+        var nota = await ventana.SincronizarContenidoAsync();
+        if (nota.Length > 0)
+            ventana.Aviso("Carpetas de actualizaciones y DLC: " + nota);
     }
 
     private void AlCancelar(object sender, RoutedEventArgs e) => MainWindow.Actual.Volver();

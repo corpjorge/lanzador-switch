@@ -81,6 +81,15 @@ public static class GestorConfiguracion
                 config.Emuladores.Add(emulador);
                 cambio = true;
             }
+        // La primera vez, las carpetas de actualizaciones y DLC que ya usan los emuladores.
+        if (!config.ContenidoDetectado)
+        {
+            config.ContenidoDetectado = true;
+            foreach (var carpeta in DetectarCarpetasContenido(config))
+                if (!config.CarpetasContenido.Contains(carpeta, StringComparer.OrdinalIgnoreCase))
+                    config.CarpetasContenido.Add(carpeta);
+            cambio = true;
+        }
         return cambio;
     }
 
@@ -159,6 +168,28 @@ public static class GestorConfiguracion
             catch (JsonException) { }
         }
         return NormalizarCarpetas(carpetas);
+    }
+
+    /// <summary>
+    /// Las carpetas de actualizaciones y DLC que ya tienen Eden, Citron o Ryujinx, sin las propias del emulador
+    /// (p. ej. la carpeta sdmc de Citron) ni las que ya no existen.
+    /// </summary>
+    public static List<string> DetectarCarpetasContenido(Configuracion config)
+    {
+        var carpetas = new List<string>();
+        foreach (var emu in config.Emuladores.Where(e => e.Instalado))
+        {
+            try
+            {
+                var datos = ContenidoExterno.Normalizar(emu.CarpetaDatos) + Path.DirectorySeparatorChar;
+                carpetas.AddRange(ContenidoExterno.Leer(emu).Select(ContenidoExterno.Normalizar)
+                    .Where(c => !c.StartsWith(datos, StringComparison.OrdinalIgnoreCase)));
+            }
+            catch (IOException) { }
+            catch (JsonException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+        return carpetas.Where(c => c.Length > 2 && Directory.Exists(c)).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     public static List<string> NormalizarCarpetas(IEnumerable<string> carpetas)

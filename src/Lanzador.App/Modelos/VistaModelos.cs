@@ -318,12 +318,18 @@ public sealed class ConversionVM(Lanzador.Core.Conversion.ArchivoComprimido arch
     public bool PuedeBorrar => Verificado && !Borrado && !Ocupado;
     public bool TieneResultado => Resultado != null && !Ocupado;
 
+    /// <summary>"Juego", "Actualización" o "DLC" (por el Title ID del nombre); "Archivo" si no lo trae.</summary>
+    public string Tipo => Lanzador.Core.ContenidoExterno.TipoDeArchivo(Archivo.Ruta) ?? "Archivo";
+
+    /// <summary>Es una actualización o un DLC: los emuladores lo cargan desde sus carpetas de contenido.</summary>
+    public bool EsContenido => Tipo is "Actualización" or "DLC";
+
     public string TextoTamano
     {
         get
         {
             var extension = Path.GetExtension(Archivo.Ruta).TrimStart('.').ToUpperInvariant();
-            var origen = $"{extension} {Lanzador.Core.Conversion.ConversorNsz.Tamano(Archivo.Tamano)}";
+            var origen = $"{Tipo}  ·  {extension} {Lanzador.Core.Conversion.ConversorNsz.Tamano(Archivo.Tamano)}";
             return Archivo.TamanoDestino is { } destino ? $"{origen}  →  NSP {Lanzador.Core.Conversion.ConversorNsz.Tamano(destino)}" : origen;
         }
     }

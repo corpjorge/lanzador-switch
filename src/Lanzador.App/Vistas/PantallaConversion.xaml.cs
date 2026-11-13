@@ -81,7 +81,7 @@ public partial class PantallaConversion : UserControl, IPantalla
     {
         _buscando = true;
         TextoResumen.Text = "Buscando juegos comprimidos en tus carpetas de juegos…";
-        var carpetas = Estado.Config.CarpetasJuegos.ToList();
+        var carpetas = Estado.Config.CarpetasEscaneo;
         List<ArchivoComprimido> encontrados;
         try
         {
@@ -194,6 +194,7 @@ public partial class PantallaConversion : UserControl, IPantalla
             vm.Refrescar();
         }
         var verificados = new List<ConversionVM>();
+        var contenido = new List<string>();
         var errores = 0;
         try
         {
@@ -231,6 +232,9 @@ public partial class PantallaConversion : UserControl, IPantalla
                 {
                     _cambios = true;
                     vm.Archivo = await Task.Run(() => ConversorNsz.Examinar(archivo.Ruta));
+                    // Una actualización o un DLC: su carpeta tiene que estar dada de alta en los emuladores.
+                    if (vm.EsContenido && Path.GetDirectoryName(archivo.Destino) is { } carpeta)
+                        contenido.Add(carpeta);
                 }
                 if (vm.Verificado)
                     verificados.Add(vm);
@@ -255,6 +259,15 @@ public partial class PantallaConversion : UserControl, IPantalla
             ActualizarResumen();
         }
 
+        if (contenido.Count > 0)
+        {
+            var nota = await MainWindow.Actual.AsegurarContenidoAsync(contenido);
+            foreach (var vm in lista.Where(v => v.EsContenido && v.Verificado))
+            {
+                vm.Resultado += " " + nota;
+                vm.Refrescar();
+            }
+        }
         if (verificados.Count > 0)
             ConfirmarBorrar(verificados, errores);
         else if (ct.IsCancellationRequested)

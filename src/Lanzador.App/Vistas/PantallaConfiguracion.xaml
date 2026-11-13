@@ -52,6 +52,16 @@
                     <Button Content="Usar las de Eden y Ryujinx" Style="{StaticResource BotonPlano}" Click="AlDetectarCarpetas"/>
                 </WrapPanel>
 
+                <TextBlock Text="Carpetas de actualizaciones y DLC" Style="{StaticResource title}" Margin="0,28,0,12"/>
+                <TextBlock Style="{StaticResource caption}" TextWrapping="Wrap" TextTrimming="None" Margin="0,0,0,8"
+                           Text="Pon aquí los archivos de actualización y de DLC (.nsp). Al guardar, el lanzador da de alta estas carpetas en Eden, Citron y Ryujinx, que las cargan solos al abrir el juego, sin instalar nada. Suyu no lo admite: ahí se instalan desde el emulador. Los .nsz que haya aquí aparecen en ☰ → Convertir juegos NSZ a NSP."/>
+                <ListBox x:Name="ListaContenido" Style="{StaticResource Lista}" MinHeight="70" Margin="0,0,0,8"/>
+                <WrapPanel>
+                    <Button Content="Agregar carpeta…" Style="{StaticResource BotonPlano}" Click="AlAgregarContenido"/>
+                    <Button Content="Quitar la seleccionada" Style="{StaticResource BotonPlano}" Click="AlQuitarContenido"/>
+                    <Button Content="Usar las de los emuladores" Style="{StaticResource BotonPlano}" Click="AlDetectarContenido"/>
+                </WrapPanel>
+
                 <TextBlock Text="Internet" Style="{StaticResource title}" Margin="0,28,0,12"/>
                 <CheckBox x:Name="CasillaContenidoEnLinea" Content="Descargar carátulas, fondos, trucos y listas de compatibilidad" Style="{StaticResource Casilla}"/>
                 <TextBlock Style="{StaticResource caption}" TextWrapping="Wrap" TextTrimming="None"

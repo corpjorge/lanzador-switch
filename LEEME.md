@@ -186,6 +186,21 @@ La carpeta `datos` no se toca. Si el release no trae instalador (versiones hasta
 - No usa programas externos ni necesita claves: descomprime el formato de [nsz](https://github.com/nicoboss/nsz) (zstd) y vuelve a cifrar cada sección con los datos que trae el propio archivo.
 - Antes de empezar comprueba que haya espacio en el disco. Al salir, la biblioteca se vuelve a leer.
 
+## Actualizaciones y DLC de los juegos
+
+Los emuladores cargan las actualizaciones y los DLC desde carpetas, sin instalar nada. En **☰ → Configuración → Carpetas de actualizaciones y DLC** eliges esas carpetas y, al guardar, el lanzador las da de alta en cada emulador:
+
+| Emulador | Dónde lo escribe |
+|---|---|
+| Eden y Citron Neo | `Paths\external_content_dirs` de `user\config\qt-config.ini` (sus «carpetas de contenido externo») |
+| Ryujinx | `autoload_dirs` de `portable\Config.json` (carga automática de actualizaciones y DLC) |
+| Suyu | No lo admite: se instalan desde el propio emulador |
+
+- La primera vez, la lista se llena con las carpetas que ya tenían tus emuladores.
+- Solo se agregan carpetas: nunca se quita una que el emulador ya tuviera. Con el emulador cerrado y con respaldo.
+- Pon ahí los archivos `.nsp` de actualización o DLC. Si los tienes en `.nsz`, aparecen en **Convertir juegos NSZ a NSP** marcados como «Actualización» o «DLC»; al convertirlos, su carpeta se da de alta sola en los emuladores.
+- Ryujinx lee esas carpetas al cargar su lista de juegos: si una actualización nueva no aparece, abre Ryujinx una vez.
+
 ## Claves y firmware
 
 El lanzador admite dos orígenes de claves y firmware. Desde **☰ → Configuración → Claves y firmware → Examinar…**, elige uno:

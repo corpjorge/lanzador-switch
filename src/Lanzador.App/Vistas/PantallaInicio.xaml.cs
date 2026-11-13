@@ -130,7 +130,7 @@ public partial class PantallaInicio : UserControl, ISeccion
             definicion.Add(("Todos los juegos", Estado.Juegos.Count.ToString(), Estado.Juegos));
 
         // Si las filas no cambiaron (p. ej. llegó la compatibilidad), solo se refresca el juego con foco.
-        var firma = string.Join("|", definicion.Select(d => d.Titulo + ":" + string.Join(",", d.Juegos.Select(j => j.Juego.Clave))));
+        var firma = string.Join("|", definicion.Select(d => d.Titulo + ":" + string.Join(",", d.Juegos.Select(j => j.Juego.Clave + ">" + j.Juego.RutaArchivo))));
         if (firma == _firma)
         {
             ActualizarHeroe(false);

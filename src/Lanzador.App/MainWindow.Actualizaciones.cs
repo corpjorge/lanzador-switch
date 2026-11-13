@@ -129,6 +129,56 @@ public partial class MainWindow
         AbrirMenu(new MenuEmergente(lineas.Count == 1 ? "Hay una actualización" : "Hay actualizaciones", string.Join("\n", lineas), opciones));
     }
 
+    /// <summary>
+    /// Da de alta carpetas de actualizaciones y DLC: las suma a la configuración y a los emuladores que las cargan
+    /// solos (Eden, Citron, Ryujinx). Devuelve una frase con lo que pasó, para mostrarla.
+    /// </summary>
+    public async Task<string> AsegurarContenidoAsync(IEnumerable<string> carpetas)
+    {
+        var nuevas = carpetas.Select(ContenidoExterno.Normalizar).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var agregadas = nuevas.Where(c => !Estado.Config.CarpetasContenido.Any(x => ContenidoExterno.Normalizar(x).Equals(c, StringComparison.OrdinalIgnoreCase))).ToList();
+        if (agregadas.Count > 0)
+        {
+            Estado.Config.CarpetasContenido.AddRange(agregadas);
+            Estado.GuardarConfig();
+        }
+        return await SincronizarContenidoAsync();
+    }
+
+    /// <summary>Pone en cada emulador instalado las carpetas de actualizaciones y DLC de la configuración que le falten.</summary>
+    public async Task<string> SincronizarContenidoAsync()
+    {
+        var carpetas = Estado.Config.CarpetasContenido.ToList();
+        if (carpetas.Count == 0)
+            return "";
+        var cargan = new List<string>();
+        var manual = new List<string>();
+        var errores = new List<string>();
+        foreach (var emulador in Estado.Config.Emuladores.Where(e => e.Instalado).ToList())
+        {
+            var (admite, resultado) = await Task.Run(() => (ContenidoExterno.Admite(emulador), ContenidoExterno.Agregar(emulador, carpetas)));
+            if (!resultado.Exito)
+                errores.Add(resultado.Mensaje);
+            else if (admite)
+                cargan.Add(emulador.Nombre);
+            else
+                manual.Add(emulador.Nombre);
+        }
+        var partes = new List<string>();
+        if (cargan.Count > 0)
+            partes.Add($"{Lista(cargan)} {(cargan.Count == 1 ? "carga" : "cargan")} solos las actualizaciones y DLC de esa carpeta.");
+        if (manual.Count > 0)
+            partes.Add($"En {Lista(manual)} hay que instalarlos desde el propio emulador.");
+        partes.AddRange(errores);
+        if (errores.Count > 0)
+            Aviso(string.Join(" ", errores), true);
+        return string.Join(" ", partes);
+    }
+
+    /// <summary>"Eden", "Eden y Ryujinx", "Eden, Citron Neo y Ryujinx".</summary>
+    private static string Lista(IReadOnlyList<string> nombres) =>
+        nombres.Count <= 1 ? string.Concat(nombres) : string.Join(", ", nombres.Take(nombres.Count - 1)) + " y " + nombres[^1];
+
     /// <summary>Va a la sección Emuladores y actualiza esos emuladores, uno tras otro.</summary>
     private void ActualizarEmuladores(IEnumerable<string> ids)
     {

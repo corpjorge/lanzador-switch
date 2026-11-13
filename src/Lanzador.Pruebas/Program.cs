@@ -153,6 +153,7 @@ fallos += PruebasControles.Ejecutar(temporal, config);
 fallos += PruebasClavesFirmware.Ejecutar(temporal);
 fallos += PruebasConversion.Ejecutar(temporal, config.CarpetasJuegos);
 fallos += PruebasLanzador.Ejecutar();
+fallos += PruebasContenido.Ejecutar(temporal, config);
 
 if (args.Contains("--ia"))
 {

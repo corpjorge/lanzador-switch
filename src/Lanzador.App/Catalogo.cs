@@ -54,7 +54,7 @@ public static class Catalogo
         var juegos = await Task.Run(() =>
         {
             var nombres = ryujinx != null ? EscanerBiblioteca.NombresDeRyujinx(ryujinx.CarpetaDatos) : null;
-            return EscanerBiblioteca.Escanear(config.CarpetasJuegos, nombres);
+            return EscanerBiblioteca.Escanear(config.CarpetasEscaneo, nombres);
         });
 
         // Se conservan las carátulas ya cargadas de los juegos que siguen.
