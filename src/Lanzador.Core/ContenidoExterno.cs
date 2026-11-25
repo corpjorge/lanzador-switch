@@ -22,6 +22,24 @@ public static partial class ContenidoExterno
 {
     private const string SeccionYuzu = "UI";
     private const string ClaveTamano = @"Paths\external_content_dirs\size";
+    private static readonly string[] Subcarpetas = ["update", "updates", "dlc", "dlcs"];
+
+    public static List<string> CarpetasDeBiblioteca(Configuracion config) =>
+        config.CarpetasContenido.Concat(config.CarpetasJuegos.Where(Directory.Exists)
+            .SelectMany(r => Subcarpetas.Select(n => Path.Combine(r, n))))
+            .Where(Directory.Exists).Select(Normalizar).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+    private static string ArchivoConfig(EmuladorConfig emulador)
+    {
+        var ruta = Controles.Controles.ArchivoConfig(emulador);
+        if (emulador.Tipo == TipoEmulador.Ryujinx && Path.GetDirectoryName(emulador.RutaExe) is { Length: > 0 } dir)
+        {
+            var local = Path.Combine(dir, "Config.json");
+            if (File.Exists(local))
+                return local;
+        }
+        return ruta;
+    }
 
     /// <summary>"Juego", "Actualización" o "DLC" según el Title ID del nombre del archivo; null si no lo trae.</summary>
     public static string? TipoDeArchivo(string ruta)
@@ -41,12 +59,15 @@ public static partial class ContenidoExterno
     {
         try
         {
-            var ruta = Controles.Controles.ArchivoConfig(emulador);
-            if (!File.Exists(ruta))
+            var ruta = ArchivoConfig(emulador);
+            if (string.IsNullOrWhiteSpace(emulador.CarpetaDatos))
                 return false;
             return emulador.Tipo == TipoEmulador.Ryujinx
-                ? JsonNode.Parse(File.ReadAllText(ruta)) is JsonObject raiz && raiz.ContainsKey("autoload_dirs")
-                : Ini.Leer(ruta).Valores(SeccionYuzu).ContainsKey(ClaveTamano);
+                ? File.Exists(ruta) && JsonNode.Parse(File.ReadAllText(ruta)) is JsonObject raiz &&
+                  raiz.ContainsKey("autoload_dirs")
+                : Ini.Leer(ruta).Valores(SeccionYuzu).ContainsKey(ClaveTamano) ||
+                  (emulador.Id is "eden" or "citron" && File.Exists(emulador.RutaExe) &&
+                   File.ReadAllBytes(emulador.RutaExe).AsSpan().IndexOf("external_content_dirs"u8) >= 0);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -57,18 +78,19 @@ public static partial class ContenidoExterno
     /// <summary>Las carpetas de contenido que el emulador tiene configuradas.</summary>
     public static List<string> Leer(EmuladorConfig emulador)
     {
-        var ruta = Controles.Controles.ArchivoConfig(emulador);
+        var ruta = ArchivoConfig(emulador);
         if (!File.Exists(ruta))
             return [];
         if (emulador.Tipo == TipoEmulador.Ryujinx)
             return JsonNode.Parse(File.ReadAllText(ruta)) is JsonObject raiz && raiz["autoload_dirs"] is JsonArray dirs
-                ? dirs.Select(d => d?.GetValue<string>() ?? "").Where(d => d.Length > 0).ToList()
+                ? dirs.OfType<JsonValue>().Select(d => d.TryGetValue<string>(out var valor) ? valor : "")
+                    .Where(d => d.Length > 0).ToList()
                 : [];
-        return Ini.Leer(ruta).Pares(SeccionYuzu)
-            .Where(p => RxEntrada().IsMatch(p.Clave))
-            .Select(p => QtIni.Decodificar(p.Valor))
-            .Where(v => v.Length > 0)
-            .ToList();
+        var valores = Ini.Leer(ruta).Valores(SeccionYuzu);
+        var tamano = Tamano(valores);
+        return valores.Select(p => (Indice: RxEntrada().Match(p.Key), p.Value))
+            .Where(p => p.Indice.Success && int.TryParse(p.Indice.Groups[1].Value, out var i) && i > 0 && i <= tamano)
+            .Select(p => QtIni.Decodificar(p.Value)).Where(v => v.Length > 0).ToList();
     }
 
     /// <summary>Agrega al emulador las carpetas que le falten.</summary>
@@ -88,7 +110,7 @@ public static partial class ContenidoExterno
             if (Actualizador.Bloqueo(emulador) is { } motivo)
                 return new(false, motivo);
 
-            var ruta = Controles.Controles.ArchivoConfig(emulador);
+            var ruta = ArchivoConfig(emulador);
             Respaldos.Copiar(ruta, $"{emulador.Id}-{Path.GetFileName(ruta)}");
             if (emulador.Tipo == TipoEmulador.Ryujinx)
             {
@@ -103,16 +125,14 @@ public static partial class ContenidoExterno
             else
             {
                 var ini = Ini.Leer(ruta);
-                var pares = ini.Pares(SeccionYuzu).ToList();
-                // QSettings lee hasta "size": se numera después de la entrada más alta que haya, por si quedaron restos.
-                var ultimo = pares.Select(p => RxEntrada().Match(p.Clave)).Where(m => m.Success).Select(m => int.Parse(m.Groups[1].Value)).DefaultIfEmpty(0).Max();
-                var tamano = int.TryParse(pares.LastOrDefault(p => p.Clave == ClaveTamano).Valor, out var t) ? t : 0;
-                var indice = Math.Max(ultimo, tamano);
+                // QSettings ignora cualquier entrada por encima de "size".
+                var indice = Tamano(ini.Valores(SeccionYuzu));
                 var valores = new List<(string, string)>();
                 foreach (var c in nuevas)
                     valores.Add(($@"Paths\external_content_dirs\{++indice}\path", QtIni.Codificar(Path.GetFullPath(c).Replace('\\', '/').TrimEnd('/') + "/")));
                 valores.Add((ClaveTamano, indice.ToString()));
                 ini.Fijar(SeccionYuzu, valores);
+                Directory.CreateDirectory(Path.GetDirectoryName(ruta)!);
                 ini.Guardar(ruta);
             }
             return new(true, $"{emulador.Nombre}: {(nuevas.Count == 1 ? "carpeta agregada" : $"{nuevas.Count} carpetas agregadas")}.", true);
@@ -125,6 +145,9 @@ public static partial class ContenidoExterno
 
     /// <summary>Misma carpeta aunque cambien las barras o la barra final.</summary>
     public static string Normalizar(string carpeta) => carpeta.Trim().Replace('/', '\\').TrimEnd('\\');
+
+    private static int Tamano(IReadOnlyDictionary<string, string> valores) =>
+        int.TryParse(valores.GetValueOrDefault(ClaveTamano), out var tamano) ? Math.Max(tamano, 0) : 0;
 
     [GeneratedRegex(@"^Paths\\external_content_dirs\\(\d+)\\path$")]
     private static partial Regex RxEntrada();

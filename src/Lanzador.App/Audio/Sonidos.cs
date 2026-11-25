@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.IO;
 
 namespace Lanzador.App.Audio;
@@ -28,13 +29,14 @@ public enum Sonido
 }
 
 /// <summary>
-/// Genera los sonidos en el momento (osciladores y ruido, sin archivos de terceros) y los toca con el volumen
+/// Sintetiza los sonidos de interfaz y reproduce la voz local de la intro si está disponible. Respeta el volumen
 /// de la configuración. Paso suena como mucho cada 90 ms para que mantener una dirección no sature.
 /// </summary>
 public static class Sonidos
 {
     private static readonly Dictionary<Sonido, float[]> Generados = new();
     private static readonly Dictionary<Sonido, DateTime> UltimaVez = new();
+    private static float[]? _ultimoArranque;
 
     /// <summary>0 a 1; 0,6 por defecto.</summary>
     public static double Volumen { get; set; } = 0.6;
@@ -45,7 +47,7 @@ public static class Sonidos
     private static readonly string? Bitacora = Environment.GetEnvironmentVariable("LANZADOR_AUDIO_LOG");
     private static bool _falloAnotado;
 
-    public static void Tocar(Sonido sonido)
+    public static void Tocar(Sonido sonido, CancellationToken cancelacion = default)
     {
         if (!Activados || Volumen <= 0)
         {
@@ -57,7 +59,17 @@ public static class Sonidos
         if (UltimaVez.TryGetValue(sonido, out var antes) && (ahora - antes).TotalMilliseconds < separacion)
             return;
         UltimaVez[sonido] = ahora;
-        if (!Generados.TryGetValue(sonido, out var muestras))
+        float[] muestras;
+        if (sonido == Sonido.Arranque)
+        {
+            var (pcm, voz) = VocesIntro.Elegir();
+            if (voz != null)
+                Anotar($"Voz de la intro: {voz}");
+            _ultimoArranque = muestras = Arranque(pcm);
+        }
+        else if (Generados.TryGetValue(sonido, out var guardadas))
+            muestras = guardadas;
+        else
             Generados[sonido] = muestras = Generar(sonido);
         SalidaWave.AlInformar ??= texto => Anotar("Audio: " + texto);
         SalidaWave.AlFallar ??= fallo =>
@@ -65,7 +77,7 @@ public static class Sonidos
             Anotar("Salida de audio: " + fallo);
             AnotarFalloUnaVez("No se pudieron tocar los sonidos: " + fallo);
         };
-        SalidaWave.Tocar(muestras, Volumen);
+        SalidaWave.Tocar(muestras, Volumen, cancelacion);
         Anotar($"{sonido}: a la mezcla ({muestras.Length * 1000 / SalidaWave.Frecuencia} ms, volumen {Volumen:0.00}, salida {(SalidaWave.Abierta ? "abierta" : "abriéndose")})");
     }
 
@@ -117,7 +129,7 @@ public static class Sonidos
     /// <summary>Guarda el sonido como WAV (modo de prueba), con el volumen actual.</summary>
     public static void GuardarWav(Sonido sonido, string ruta)
     {
-        var muestras = Generar(sonido);
+        var muestras = sonido == Sonido.Arranque && _ultimoArranque != null ? _ultimoArranque : Generar(sonido);
         using var archivo = new BinaryWriter(File.Create(ruta));
         archivo.Write("RIFF"u8);
         archivo.Write(36 + muestras.Length * 2);
@@ -165,7 +177,7 @@ public static class Sonidos
         // Zumbido grave que baja (cuadrada 220 → 160 Hz, 140 ms), suave porque la cuadrada suena fuerte.
         Sonido.Error => Notas(new Nota(220, 160, 0.14, Onda.Cuadrada, 0.32, 0)),
         Sonido.Lanzar => Lanzar(),
-        Sonido.Arranque => Arranque(),
+        Sonido.Arranque => Arranque(null),
         _ => [],
     };
 
@@ -201,34 +213,45 @@ public static class Sonidos
         }
     }
 
-    /// <summary>
-    /// Intro: un soplo de ruido que sube (0,5 s) y desemboca en un acorde luminoso de mi mayor que entra nota a nota
-    /// y se apaga despacio, con un grave suave debajo (≈ 1,6 s).
-    /// </summary>
-    private static float[] Arranque()
+    private static float[] Arranque(byte[]? pcm)
     {
-        const double segundos = 1.7;
+        const double segundos = 4.78;
         var muestras = new float[(int)(segundos * SalidaWave.Frecuencia)];
         var azar = new Random(11);
         double filtrado = 0, filtrado2 = 0;
-        var largo = (int)(0.55 * SalidaWave.Frecuencia);
+        var largo = (int)(1.50 * SalidaWave.Frecuencia);
         for (var i = 0; i < largo; i++)
         {
             var t = (double)i / largo;
-            var corte = 200 * Math.Pow(6000 / 200.0, t);
+            var corte = 160 * Math.Pow(3700 / 160.0, t);
             var alfa = 1 - Math.Exp(-2 * Math.PI * corte / SalidaWave.Frecuencia);
             filtrado += alfa * (azar.NextDouble() * 2 - 1 - filtrado);
             filtrado2 += alfa * (filtrado - filtrado2);
-            var envolvente = Math.Pow(t, 1.5) * (t < 0.85 ? 1 : (1 - t) / 0.15);
-            muestras[i] += (float)(filtrado2 * envolvente * 1.0);
+            var envolvente = Math.Pow(t, 1.3) * Math.Min(1, (1 - t) / 0.2);
+            muestras[i] += (float)(filtrado2 * envolvente * 0.52);
         }
-        // Acorde (mi - sol# - si - mi) a partir de 0,42 s, una nota cada 70 ms.
-        double[] acorde = [329.63, 415.30, 493.88, 659.26];
-        for (var n = 0; n < acorde.Length; n++)
-            Sumar(muestras, new Nota(acorde[n], acorde[n], 1.15, Onda.Seno, 0.2, 0.42 + n * 0.07));
-        Sumar(muestras, new Nota(1318.5, 1318.5, 0.9, Onda.Seno, 0.07, 0.62)); // brillo agudo
-        Sumar(muestras, new Nota(82.41, 82.41, 0.9, Onda.Triangulo, 0.28, 0.42)); // grave
+        Sumar(muestras, new Nota(493.88, 659.25, 0.39, Onda.Seno, 0.12, 0.39));
+        Sumar(muestras, new Nota(739.99, 987.77, 0.43, Onda.Seno, 0.09, 0.71));
+        Sumar(muestras, new Nota(110.0, 48.0, 0.66, Onda.Seno, 0.32, 1.54));
+        Sumar(muestras, new Nota(164.81, 164.81, 1.94, Onda.Seno, 0.14, 1.61));
+        Sumar(muestras, new Nota(246.94, 246.94, 1.88, Onda.Seno, 0.12, 1.70));
+        Sumar(muestras, new Nota(369.99, 369.99, 1.80, Onda.Seno, 0.09, 1.79));
+        Sumar(muestras, new Nota(659.25, 659.25, 1.28, Onda.Seno, 0.07, 3.27));
+        Sumar(muestras, new Nota(987.77, 987.77, 1.04, Onda.Seno, 0.045, 3.51));
+        if (pcm != null)
+            SumarVozIntro(muestras, pcm);
         return muestras;
+    }
+
+    private static void SumarVozIntro(float[] destino, byte[] pcm)
+    {
+        var inicio = (int)(2.02 * SalidaWave.Frecuencia);
+        var largo = pcm.Length / 2;
+        for (var i = 0; i < largo && inicio + i < destino.Length; i++)
+        {
+            var muestra = BinaryPrimitives.ReadInt16LittleEndian(pcm.AsSpan(2 * i, 2)) / 32768f;
+            destino[inicio + i] = destino[inicio + i] * 0.48f + muestra * 0.95f;
+        }
     }
 
     /// <summary>Barrido de ruido que sube (400 ms) con tres notas ascendentes encima.</summary>

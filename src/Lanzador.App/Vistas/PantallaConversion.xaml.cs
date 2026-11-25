@@ -25,16 +25,37 @@ public partial class PantallaConversion : UserControl, IPantalla
     private bool _cambios;
 
     private readonly string? _rutaInicial;
+    private readonly IReadOnlyList<string>? _rutas;
+    private readonly Action<string>? _alConvertir;
+    private bool _confirmarLote;
 
     /// <param name="rutaInicial">El .nsz que debe quedar elegido al abrir (p. ej. el del juego desde el que se llegó).</param>
-    public PantallaConversion(string? rutaInicial = null)
+    /// <param name="rutas">Si se indica, limita la búsqueda y la conversión a estos archivos.</param>
+    /// <param name="tituloJuego">Nombre del juego cuando se abre desde su ficha.</param>
+    /// <param name="confirmarLote">Muestra la confirmación del lote al cargar la lista.</param>
+    /// <param name="alConvertir">Recibe la ruta del NSP cuando queda convertido y verificado.</param>
+    public PantallaConversion(string? rutaInicial = null, IReadOnlyList<string>? rutas = null,
+        string? tituloJuego = null, bool confirmarLote = false, Action<string>? alConvertir = null)
     {
         _rutaInicial = rutaInicial;
+        _rutas = rutas;
+        _confirmarLote = confirmarLote;
+        _alConvertir = alConvertir;
         InitializeComponent();
+        if (tituloJuego != null)
+            TextoOrigen.Text = tituloJuego;
         Loaded += async (_, _) =>
         {
             if (_archivos.Count == 0 && !_buscando)
+            {
                 await BuscarAsync();
+                if (_confirmarLote && IsLoaded)
+                {
+                    _confirmarLote = false;
+                    if (_archivos.Any(a => a.Convertible))
+                        ConfirmarTodos();
+                }
+            }
         };
     }
 
@@ -80,12 +101,14 @@ public partial class PantallaConversion : UserControl, IPantalla
     private async Task BuscarAsync()
     {
         _buscando = true;
-        TextoResumen.Text = "Buscando juegos comprimidos en tus carpetas de juegos…";
+        TextoResumen.Text = _rutas == null ? "Buscando juegos comprimidos en tus carpetas de juegos…" : "Revisando archivos de este juego…";
         var carpetas = Estado.Config.CarpetasEscaneo;
         List<ArchivoComprimido> encontrados;
         try
         {
-            encontrados = await Task.Run(() => ConversorNsz.Buscar(carpetas));
+            encontrados = await Task.Run(() => _rutas == null
+                ? ConversorNsz.Buscar(carpetas)
+                : _rutas.Where(File.Exists).Select(ConversorNsz.Examinar).ToList());
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
@@ -96,7 +119,7 @@ public partial class PantallaConversion : UserControl, IPantalla
         // Primero lo que se puede convertir, después lo ya convertido y al final lo que no.
         _archivos = encontrados.OrderBy(a => a.Estado).Select(a => new ConversionVM(a)).ToList();
         ListaArchivos.ItemsSource = _archivos;
-        TextoVacio.Text = carpetas.Count == 0
+        TextoVacio.Text = _rutas != null ? "Estos archivos ya no están disponibles para convertir." : carpetas.Count == 0
             ? "No hay carpetas de juegos configuradas. Agrégalas en ☰ → Configuración."
             : "No hay juegos .nsz en tus carpetas de juegos: no hay nada que convertir.";
         TextoVacio.Visibility = _archivos.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -170,7 +193,7 @@ public partial class PantallaConversion : UserControl, IPantalla
             return;
         }
         var total = pendientes.Sum(a => a.Archivo.TamanoDestino ?? 0);
-        MainWindow.Actual.AbrirMenu(new MenuEmergente($"Convertir {Cuantos(pendientes.Count, "juego", "juegos")} a NSP",
+        MainWindow.Actual.AbrirMenu(new MenuEmergente($"Convertir {Cuantos(pendientes.Count, "archivo", "archivos")} a NSP",
             $"Se crean los .nsp junto a cada .nsz (unos {ConversorNsz.Tamano(total)} en total) y se verifica cada uno. Los .nsz no se tocan; al terminar podrás decidir si los borras.",
         [
             new OpcionMenu("Convertir todos ahora", "Uno tras otro; puedes cancelar con B", () => _ = ProcesarAsync(pendientes)),
@@ -232,8 +255,10 @@ public partial class PantallaConversion : UserControl, IPantalla
                 {
                     _cambios = true;
                     vm.Archivo = await Task.Run(() => ConversorNsz.Examinar(archivo.Ruta));
+                    if (vm.Verificado)
+                        _alConvertir?.Invoke(archivo.Destino);
                     // Una actualización o un DLC: su carpeta tiene que estar dada de alta en los emuladores.
-                    if (vm.EsContenido && Path.GetDirectoryName(archivo.Destino) is { } carpeta)
+                    if ((vm.EsContenido || _rutas != null) && Path.GetDirectoryName(archivo.Destino) is { } carpeta)
                         contenido.Add(carpeta);
                 }
                 if (vm.Verificado)
@@ -262,7 +287,7 @@ public partial class PantallaConversion : UserControl, IPantalla
         if (contenido.Count > 0)
         {
             var nota = await MainWindow.Actual.AsegurarContenidoAsync(contenido);
-            foreach (var vm in lista.Where(v => v.EsContenido && v.Verificado))
+            foreach (var vm in lista.Where(v => (v.EsContenido || _rutas != null) && v.Verificado))
             {
                 vm.Resultado += " " + nota;
                 vm.Refrescar();

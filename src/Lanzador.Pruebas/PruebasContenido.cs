@@ -74,6 +74,60 @@ static class PruebasContenido
                     $"{real.Nombre}: «size» cubre todas las entradas ({tamano}), sin índices repetidos y con barras de Qt");
             }
         }
+        ComprobarSincronizacion(raiz);
+        ComprobarFicha(raiz);
         return _fallos;
+    }
+
+    private static void ComprobarSincronizacion(string raiz)
+    {
+        var biblioteca = Directory.CreateDirectory(Path.Combine(raiz, "biblioteca")).FullName;
+        var updates = Directory.CreateDirectory(Path.Combine(biblioteca, "updates")).FullName;
+        var dlc = Directory.CreateDirectory(Path.Combine(biblioteca, "dlc")).FullName;
+        var config = new Configuracion { CarpetasJuegos = [biblioteca] };
+        var carpetas = ContenidoExterno.CarpetasDeBiblioteca(config);
+        Comprobar(carpetas.Count == 2 && carpetas.Contains(updates) && carpetas.Contains(dlc),
+            "Carga automática: descubre las carpetas de contenido de la biblioteca sin agregarlas a mano");
+
+        var datos = Directory.CreateDirectory(Path.Combine(raiz, "qt-con-restos", "config")).Parent!.FullName;
+        var emu = new EmuladorConfig { Id = "qt-con-restos", CarpetaDatos = datos, RutaExe = Path.Combine(datos, "emulador.exe") };
+        var ini = Path.Combine(datos, "config", "qt-config.ini");
+        File.WriteAllText(ini, $"""
+            [UI]
+            Paths\external_content_dirs\size=1
+            Paths\external_content_dirs\1\path={updates.Replace('\\', '/')}
+            Paths\external_content_dirs\4\path={dlc.Replace('\\', '/')}
+            """);
+        Comprobar(ContenidoExterno.Leer(emu).Count == 1 && ContenidoExterno.Agregar(emu, carpetas).Cambio &&
+                  ContenidoExterno.Leer(emu).Select(ContenidoExterno.Normalizar).SequenceEqual(new[] { updates, dlc }) &&
+                  !ContenidoExterno.Agregar(emu, carpetas).Cambio,
+            "Carga automática: respeta size de Qt, registra rutas fuera del tamaño y evita duplicados");
+    }
+
+    private static void ComprobarFicha(string raiz)
+    {
+        var archivos = Directory.CreateDirectory(Path.Combine(raiz, "ficha")).FullName;
+        var juego = new Juego { TitleId = "0100AAAA00001000" };
+        var update = Path.Combine(archivos, "Parche [0100AAAA00001800].nsp");
+        var dlc = Path.Combine(archivos, "Complemento [0100AAAA00002001].nsp");
+        foreach (var archivo in new[] { update, Path.ChangeExtension(update, ".nsz"), dlc,
+            Path.Combine(archivos, "Otro juego [0100AAAA00002800].nsp") })
+            File.WriteAllText(archivo, "");
+
+        var paquetes = ContenidoJuego.Buscar(juego, [archivos]);
+        Comprobar(paquetes.Count == 2 && paquetes.Any(p => p.Ruta == update && p.Convertido) && paquetes.Any(p => p.Ruta == dlc),
+            "Ficha: asocia actualización y DLC al juego, agrupa la conversión y excluye el juego adyacente");
+
+        var emu = new EmuladorConfig { Id = "ryujinx-ficha", Tipo = TipoEmulador.Ryujinx, CarpetaDatos = archivos };
+        var registro = Directory.CreateDirectory(Path.Combine(archivos, "games", juego.TitleId.ToLowerInvariant())).FullName;
+        var actualizaciones = new JsonObject { ["selected"] = update, ["paths"] = new JsonArray(JsonValue.Create(update)) };
+        File.WriteAllText(Path.Combine(registro, "updates.json"), actualizaciones.ToJsonString());
+        var complementos = new JsonArray(new JsonObject { ["path"] = dlc, ["dlc_nca_list"] = new JsonArray(
+            new JsonObject { ["is_enabled"] = false }) });
+        File.WriteAllText(Path.Combine(registro, "dlc.json"), complementos.ToJsonString());
+        var filas = ContenidoJuego.Leer(juego, emu, paquetes);
+        Comprobar(filas.Count == 2 && filas.Any(f => f.Ruta == update && f.Activo) &&
+                  filas.Any(f => f.Ruta == dlc && !f.Activo && f.Estado == "Desactivado"),
+            "Ficha: Ryujinx indica la actualización activa y el DLC desactivado sin duplicar los archivos");
     }
 }

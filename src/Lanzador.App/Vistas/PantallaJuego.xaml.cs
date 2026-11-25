@@ -20,7 +20,7 @@ namespace Lanzador.App.Vistas;
 /// </summary>
 public partial class PantallaJuego : UserControl, IPantalla
 {
-    private enum Foco { Jugar, Trucos, Calificacion, Archivo }
+    private enum Foco { Jugar, Contenido, Trucos, Calificacion, Archivo }
 
     private readonly JuegoVM _juego;
     private readonly List<EmuladorConfig> _emuladores;
@@ -29,6 +29,8 @@ public partial class PantallaJuego : UserControl, IPantalla
     private int _emulador;
     private Foco _foco = Foco.Jugar;
     private int _consulta;
+    private int _consultaContenido;
+    private Task<IReadOnlyList<PaqueteJuego>>? _paquetes;
 
     public PantallaJuego(JuegoVM juego, string origen)
     {
@@ -86,6 +88,7 @@ public partial class PantallaJuego : UserControl, IPantalla
 
     public void AlMostrar()
     {
+        _paquetes = null;
         ActualizarTodo();
         if (_juego.Juego.TieneTitleId)
             _ = PonerFondoAsync();
@@ -118,6 +121,10 @@ public partial class PantallaJuego : UserControl, IPantalla
                     _ = MainWindow.Actual.JugarAsync(_juego, emulador);
                 else
                     MainWindow.Actual.Aviso("No hay emuladores configurados. Revisa Configuración (botón ☰).", true);
+                break;
+            case Foco.Contenido:
+                MainWindow.Actual.Mostrar(new PantallaContenidoJuego(_juego, _emuladores, _emulador,
+                    seleccionado => _emulador = seleccionado));
                 break;
             case Foco.Trucos:
                 if (_catalogoFallo)
@@ -173,7 +180,8 @@ public partial class PantallaJuego : UserControl, IPantalla
         var jugar = _foco == Foco.Jugar;
         BrilloJugar.Visibility = jugar ? Visibility.Visible : Visibility.Collapsed;
         CajaJugar.BorderBrush = jugar ? (Brush)FindResource("focus") : Brushes.Transparent;
-        foreach (var (fila, foco) in new[] { (FilaTrucos, Foco.Trucos), (FilaCalificacion, Foco.Calificacion), (FilaArchivo, Foco.Archivo) })
+        foreach (var (fila, foco) in new[] { (FilaContenido, Foco.Contenido), (FilaTrucos, Foco.Trucos),
+            (FilaCalificacion, Foco.Calificacion), (FilaArchivo, Foco.Archivo) })
         {
             var activa = foco == _foco;
             fila.Background = activa ? (Brush)FindResource("surface-200") : (Brush)FindResource("surface-glass-strong");
@@ -190,6 +198,29 @@ public partial class PantallaJuego : UserControl, IPantalla
         ActualizarSelector();
         ActualizarCalificacion();
         ActualizarVersionYTrucos();
+        _ = ActualizarContenidoAsync();
+    }
+
+    private async Task ActualizarContenidoAsync()
+    {
+        var consulta = ++_consultaContenido;
+        var emulador = Emulador;
+        var juego = _juego.Juego;
+        var carpetas = Estado.Config.CarpetasEscaneo;
+        var emuladores = Estado.Config.Emuladores.ToArray();
+        TextoContenido.Text = "Buscando contenido…";
+        try
+        {
+            var paquetes = await (_paquetes ??= Task.Run(() => ContenidoJuego.Buscar(juego, carpetas, emuladores)));
+            var filas = await Task.Run(() => ContenidoJuego.Leer(juego, emulador, paquetes));
+            if (consulta == _consultaContenido)
+                TextoContenido.Text = PantallaContenidoJuego.Resumen(filas);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or ArgumentException)
+        {
+            if (consulta == _consultaContenido)
+                TextoContenido.Text = "No se pudo leer el contenido";
+        }
     }
 
     private void ActualizarChips()
@@ -407,7 +438,8 @@ public partial class PantallaJuego : UserControl, IPantalla
 
     private void AlPulsarFila(object sender, MouseButtonEventArgs e)
     {
-        var foco = sender == FilaTrucos ? Foco.Trucos : sender == FilaCalificacion ? Foco.Calificacion : Foco.Archivo;
+        var foco = sender == FilaContenido ? Foco.Contenido : sender == FilaTrucos ? Foco.Trucos
+            : sender == FilaCalificacion ? Foco.Calificacion : Foco.Archivo;
         _foco = foco;
         MarcarFoco();
         MainWindow.Actual.ActualizarAyudas();

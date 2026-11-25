@@ -1,0 +1,145 @@
+<UserControl x:Class="Lanzador.App.Vistas.PantallaContenidoJuego"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <Style x:Key="BotonContenido" TargetType="Button">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Background" Value="{StaticResource surface-100}"/>
+            <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource line-100}"/>
+            <Setter Property="Padding" Value="17,8"/>
+            <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+            <Setter Property="FontSize" Value="21"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Fondo" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="2" CornerRadius="{StaticResource radius-md}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Fondo" Property="BorderBrush" Value="{StaticResource focus}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Fondo" Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PestanaContenido" TargetType="RadioButton">
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="{StaticResource ink-200}"/>
+            <Setter Property="Padding" Value="18,8"/>
+            <Setter Property="Margin" Value="0,0,10,0"/>
+            <Setter Property="FontFamily" Value="{StaticResource font-text}"/>
+            <Setter Property="FontSize" Value="23"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Fondo" Background="{StaticResource surface-100}" BorderBrush="{StaticResource line-100}"
+                                BorderThickness="2" CornerRadius="{StaticResource radius-md}" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Fondo" Property="BorderBrush" Value="{StaticResource focus}"/>
+                                <Setter TargetName="Fondo" Property="Background" Value="{StaticResource surface-200}"/>
+                                <Setter Property="Foreground" Value="{StaticResource ink-100}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Fondo" Property="BorderBrush" Value="{StaticResource focus}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <Rectangle Fill="#D90C1118" IsHitTestVisible="False"/>
+        <Grid Margin="64,40,64,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel>
+                <TextBlock x:Name="TextoJuego" Style="{StaticResource caption}" TextTrimming="CharacterEllipsis"/>
+                <TextBlock Text="Contenido" Style="{StaticResource display-l}" Margin="0,8,0,14"/>
+                <DockPanel LastChildFill="False">
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                        <Button Content="‹" Style="{StaticResource BotonContenido}" Click="AlCambiarEmulador" Tag="-1"
+                                x:Name="EmuladorAnterior" AutomationProperties.Name="Emulador anterior"/>
+                        <TextBlock x:Name="TextoEmulador" Style="{StaticResource body-l}" VerticalAlignment="Center" Margin="16,0"/>
+                        <Button Content="›" Style="{StaticResource BotonContenido}" Click="AlCambiarEmulador" Tag="1"
+                                x:Name="EmuladorSiguiente" AutomationProperties.Name="Emulador siguiente"/>
+                    </StackPanel>
+                    <Button x:Name="BotonLote" DockPanel.Dock="Right" Style="{StaticResource BotonContenido}"
+                            Content="Convertir pendientes de este juego" Click="AlConvertirLote"
+                            Visibility="Collapsed" Background="{StaticResource accent-soft}"/>
+                </DockPanel>
+            </StackPanel>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,22,0,15">
+                <RadioButton x:Name="PestanaActualizaciones" Content="Actualizaciones" Style="{StaticResource PestanaContenido}"
+                             IsChecked="True" Click="AlPulsarPestana"/>
+                <RadioButton x:Name="PestanaDlc" Content="DLC" Style="{StaticResource PestanaContenido}" Click="AlPulsarPestana"/>
+                <RadioButton x:Name="PestanaMods" Content="Mods" Style="{StaticResource PestanaContenido}" Click="AlPulsarPestana"/>
+            </StackPanel>
+            <TextBlock x:Name="TextoVacio" Grid.Row="2" Margin="4,20,0,0" Style="{StaticResource body-l}" TextWrapping="Wrap"/>
+            <ListBox x:Name="ListaContenido" Grid.Row="2" Background="Transparent" BorderThickness="0"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     Focusable="False" Margin="0,0,0,28" MouseDoubleClick="AlAbrirFila">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="IsTabStop" Value="False"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListBoxItem">
+                                    <Border x:Name="Fondo" CornerRadius="{StaticResource radius-md}" Padding="16,11" Margin="0,0,0,8"
+                                            Background="{StaticResource surface-100}" BorderBrush="Transparent" BorderThickness="3">
+                                        <ContentPresenter/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Fondo" Property="Background" Value="{StaticResource surface-200}"/>
+                                            <Setter TargetName="Fondo" Property="BorderBrush" Value="{StaticResource focus}"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <DockPanel>
+                            <Button x:Name="Convertir" Content="Convertir a NSP" Style="{StaticResource BotonContenido}"
+                                    Click="AlConvertirArchivo" DockPanel.Dock="Right" Visibility="Collapsed" Margin="18,0,0,0"/>
+                            <Border Style="{StaticResource Chip}" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="12,0,0,0">
+                                <TextBlock Text="{Binding Estado}" Style="{StaticResource chip}"/>
+                            </Border>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Nombre}" Style="{StaticResource body-l}" FontWeight="SemiBold"
+                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding Nombre}"/>
+                                <TextBlock Text="{Binding Referencia}" Style="{StaticResource caption}" TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding Referencia}"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Convertible}" Value="True">
+                                <Setter TargetName="Convertir" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+    </Grid>
+</UserControl>

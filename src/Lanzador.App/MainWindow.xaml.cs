@@ -105,6 +105,8 @@ public partial class MainWindow : Window
             if (Estado.Config.ClavesFirmware.BuscarAlIniciar)
                 _ = ConsultarClavesFirmwareAsync();
             _ = Catalogo.AsegurarAsync();
+            if (Environment.GetEnvironmentVariable("LANZADOR_PRUEBA") == null)
+                _ = SincronizarContenidoAsync(avisarErrores: false);
             // Mientras corre la intro se cargan los juegos y las carátulas detrás.
             if (Estado.Config.MostrarIntro && !ReducirMovimiento && Environment.GetEnvironmentVariable("LANZADOR_PRUEBA") == null)
                 MostrarIntro();
@@ -502,6 +504,9 @@ public partial class MainWindow : Window
         TextoTeclaTrucos.Visibility = tecla != null ? Visibility.Visible : Visibility.Collapsed;
         TextoAbriendo.Text = juego.Nombre;
         TextoAbriendoCon.Text = $"Abriendo con {emulador.Nombre}…";
+        var contenido = await PrepararContenidoAsync(emulador);
+        if (!contenido.Resultado.Exito)
+            Aviso(contenido.Resultado.Mensaje, true);
         if (await RepartirMandosAsync(emulador) is { } mandos)
             TextoAbriendoCon.Text += $"\n{mandos}";
         AyudaVolver.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(ReducirMovimiento ? 0 : 300))
@@ -584,6 +589,9 @@ public partial class MainWindow : Window
     /// <summary>Abre el emulador sin juego (p. ej. para configurar los mandos) y vuelve al lanzador cuando se cierra.</summary>
     public async Task<bool> AbrirEmuladorAsync(EmuladorConfig emulador, string motivo)
     {
+        var contenido = await PrepararContenidoAsync(emulador);
+        if (!contenido.Resultado.Exito)
+            Aviso(contenido.Resultado.Mensaje, true);
         Process proceso;
         try
         {
@@ -1129,118 +1137,6 @@ public partial class MainWindow : Window
         if (_ventanaTrucos?.Visible == true)
             LlenarVentanaTrucos();
     }
-
-    // ───── Intro ─────
-
-    private bool _introVisible;
-    private Storyboard? _historiaIntro;
-    private DispatcherTimer? _sonidoIntro;
-
-    /// <summary>
-    /// Intro de ~2,2 s: «Switch» aparece creciendo con su resplandor, una franja de luz cruza las letras, la línea de
-    /// acento se abre y todo se funde en Inicio, que sube desde abajo.
-    /// </summary>
-    public void MostrarIntro()
-    {
-        _historiaIntro?.Stop();
-        _introVisible = true;
-        Intro.BeginAnimation(OpacityProperty, null);
-        Intro.Opacity = 1;
-        Intro.Visibility = Visibility.Visible;
-        Sonidos.MantenerSalida(true); // despierta la salida de audio antes de que suene
-
-        var salida = Curva("ease-out");
-        var suave = Curva("ease-in-out");
-        var historia = new Storyboard();
-        void Animar(DependencyObject objetivo, DependencyProperty propiedad, double? desde, double hasta, double inicio, double segundos, IEasingFunction curva)
-        {
-            var animacion = new DoubleAnimation
-            {
-                To = hasta,
-                BeginTime = TimeSpan.FromSeconds(inicio),
-                Duration = TimeSpan.FromSeconds(segundos),
-                EasingFunction = curva,
-                FillBehavior = FillBehavior.HoldEnd,
-            };
-            if (desde is { } d)
-                animacion.From = d;
-            Storyboard.SetTarget(animacion, objetivo);
-            Storyboard.SetTargetProperty(animacion, new PropertyPath(propiedad));
-            historia.Children.Add(animacion);
-        }
-        Animar(LogoIntro, OpacityProperty, 0, 1, 0.15, 0.6, salida);
-        Animar(EscalaIntro, ScaleTransform.ScaleXProperty, 0.92, 1, 0.15, 0.7, salida);
-        Animar(EscalaIntro, ScaleTransform.ScaleYProperty, 0.92, 1, 0.15, 0.7, salida);
-        Animar(HaloIntro, OpacityProperty, 0, 1, 0.2, 0.8, salida);
-        Animar(ResplandorIntro, OpacityProperty, 0, 0.85, 0.25, 0.6, salida);
-        Animar(ResplandorIntro, OpacityProperty, null, 0.4, 1.3, 0.5, suave);
-        Animar(DestelloIntro, TranslateTransform.XProperty, -1.2, 1.2, 0.6, 0.85, suave);
-        Animar(LineaIntro, WidthProperty, 0, 240, 0.7, 0.5, salida);
-        Animar(Intro, OpacityProperty, 1, 0, 1.85, 0.4, suave);
-        Animar(EscalaIntro, ScaleTransform.ScaleXProperty, null, 1.05, 1.85, 0.4, suave);
-        Animar(EscalaIntro, ScaleTransform.ScaleYProperty, null, 1.05, 1.85, 0.4, suave);
-        historia.Completed += (_, _) => TerminarIntro();
-        _historiaIntro = historia;
-        historia.Begin();
-
-        // Inicio sube desde abajo mientras la intro se funde.
-        var entrada = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1.85) };
-        entrada.Tick += (_, _) =>
-        {
-            entrada.Stop();
-            if (_historiaIntro == historia)
-                EntrarContenido();
-        };
-        entrada.Start();
-
-        _sonidoIntro?.Stop();
-        _sonidoIntro = new DispatcherTimer { Interval = TimeSpan.FromSeconds(0.35) };
-        _sonidoIntro.Tick += (_, _) =>
-        {
-            _sonidoIntro.Stop();
-            if (_introVisible)
-                Sonidos.Tocar(Sonido.Arranque);
-        };
-        _sonidoIntro.Start();
-    }
-
-    /// <summary>Corta la intro con un fundido rápido.</summary>
-    private void SaltarIntro()
-    {
-        if (!_introVisible)
-            return;
-        _sonidoIntro?.Stop();
-        var historia = _historiaIntro;
-        historia?.Pause(); // congela el logo donde va y se funde todo encima
-        _historiaIntro = null;
-        _introVisible = false;
-        var fundido = new DoubleAnimation(Intro.Opacity, 0, TimeSpan.FromMilliseconds(180));
-        fundido.Completed += (_, _) =>
-        {
-            historia?.Stop();
-            if (!_introVisible)
-                Intro.Visibility = Visibility.Collapsed;
-        };
-        Intro.BeginAnimation(OpacityProperty, fundido);
-        EntrarContenido();
-    }
-
-    private void TerminarIntro()
-    {
-        _introVisible = false;
-        _historiaIntro = null;
-        Intro.Visibility = Visibility.Collapsed;
-    }
-
-    private void EntrarContenido()
-    {
-        var duracion = Duracion("dur-page");
-        var curva = Curva("ease-out");
-        Contenido.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, duracion) { EasingFunction = curva });
-        DesplazamientoContenido.BeginAnimation(TranslateTransform.YProperty, new DoubleAnimation(32, 0, TimeSpan.FromMilliseconds(320)) { EasingFunction = curva });
-    }
-
-    private void AlPulsarIntro(object sender, MouseButtonEventArgs e) => SaltarIntro();
 
     /// <summary>Las filas «Xbox: Vista + LB + RB»… de la pantalla negra al abrir un juego.</summary>
     private void CrearAyudaVolver()

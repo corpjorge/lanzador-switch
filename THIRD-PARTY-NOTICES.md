@@ -16,6 +16,8 @@ Lanzador Switch se distribuye con la licencia MIT (ver [LICENSE](LICENSE)). Incl
 
 El conversor de NSZ a NSP está escrito para este proyecto a partir del formato que documenta [nsz](https://github.com/nicoboss/nsz) (MIT); no incluye código suyo.
 
+Las dos grabaciones de «Switch» de la intro se generaron con el plan Starter de [ElevenLabs](https://elevenlabs.io/) y sus voces Alicia y George. Se distribuyen dentro del ejecutable como audio PCM. La reproducción se realiza localmente.
+
 ### SDL3 — licencia zlib
 
 ```

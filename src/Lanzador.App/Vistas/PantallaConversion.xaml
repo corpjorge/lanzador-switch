@@ -28,7 +28,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel>
-            <TextBlock Text="JUEGOS COMPRIMIDOS" Style="{StaticResource label}"/>
+            <TextBlock x:Name="TextoOrigen" Text="JUEGOS COMPRIMIDOS" Style="{StaticResource label}"/>
             <TextBlock Text="Convertir NSZ a NSP" Style="{StaticResource display-l}" Margin="0,18,0,0"/>
             <TextBlock Style="{StaticResource caption}" Margin="0,8,0,0" TextWrapping="Wrap" TextTrimming="None"
                        Text="Descomprime cada .nsz a un .nsp en su misma carpeta y comprueba el sha256 de todo su contenido. El .nsz no se toca: solo cuando el .nsp queda verificado puedes enviarlo a la papelera."/>

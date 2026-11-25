@@ -106,6 +106,13 @@
                 <TextBlock x:Name="TextoVolver" Style="{StaticResource caption}" Margin="0,16,0,0" TextWrapping="Wrap" MaxWidth="1080" HorizontalAlignment="Left"/>
 
                 <StackPanel x:Name="Filas" Margin="0,22,0,0" MaxWidth="1080" HorizontalAlignment="Left" Width="1080">
+                    <Border x:Name="FilaContenido" Style="{StaticResource Fila}" Cursor="Hand" MouseLeftButtonUp="AlPulsarFila">
+                        <DockPanel>
+                            <TextBlock Text="Contenido" Style="{StaticResource ClaveFila}" Width="260"/>
+                            <TextBlock Style="{StaticResource FlechaFila}" DockPanel.Dock="Right"/>
+                            <TextBlock x:Name="TextoContenido" Style="{StaticResource ValorFila}"/>
+                        </DockPanel>
+                    </Border>
                     <Border x:Name="FilaTrucos" Style="{StaticResource Fila}" Cursor="Hand" MouseLeftButtonUp="AlPulsarFila">
                         <DockPanel>
                             <TextBlock Text="Trucos" Style="{StaticResource ClaveFila}" Width="260"/>

@@ -10,32 +10,22 @@ public static partial class EscanerBiblioteca
 
     public static List<Juego> Escanear(IEnumerable<string> carpetas, IReadOnlyDictionary<string, string>? nombresConocidos = null)
     {
-        var archivos = new List<string>();
-        foreach (var carpeta in carpetas.Where(Directory.Exists))
-        {
-            archivos.AddRange(Directory
-                .EnumerateFiles(carpeta, "*", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true })
-                .Where(f => Extensiones.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase)));
-        }
-
         var juegos = new Dictionary<string, Juego>(StringComparer.OrdinalIgnoreCase);
         var sinId = new List<Juego>();
         var actualizaciones = new List<(string BaseId, ArchivoActualizacion Archivo)>();
 
         // Si un juego está en .nsp/.xci y también comprimido (.nsz/.xcz), se queda el que los emuladores pueden abrir.
-        foreach (var ruta in archivos.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(EnCarpetaExtra).ThenBy(EsComprimido))
+        foreach (var ruta in Archivos(carpetas).OrderBy(EnCarpetaExtra).ThenBy(EsComprimido))
         {
             var nombreArchivo = Path.GetFileNameWithoutExtension(ruta);
             var (version, versionTexto) = LeerVersion(nombreArchivo);
-            var m = RxTitleId().Match(nombreArchivo);
-            if (!m.Success)
+            if (LeerTitleId(nombreArchivo) is not { } id)
             {
                 if (!EnCarpetaExtra(ruta))
                     sinId.Add(new Juego { RutaArchivo = ruta, Nombre = LimpiarNombre(nombreArchivo), VersionTexto = versionTexto });
                 continue;
             }
 
-            var id = Convert.ToUInt64(m.Groups[1].Value, 16);
             var tipo = id & 0xFFF;
             if (tipo == 0x800)
             {
@@ -68,6 +58,19 @@ public static partial class EscanerBiblioteca
             .Concat(sinId)
             .OrderBy(j => j.Nombre, StringComparer.CurrentCultureIgnoreCase)
             .ToList();
+    }
+
+    internal static IEnumerable<string> Archivos(IEnumerable<string> carpetas) =>
+        carpetas.Where(Directory.Exists)
+            .SelectMany(carpeta => Directory.EnumerateFiles(carpeta, "*",
+                new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true }))
+            .Where(f => Extensiones.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
+    internal static ulong? LeerTitleId(string nombreArchivo)
+    {
+        var coincidencia = RxTitleId().Match(nombreArchivo);
+        return coincidencia.Success ? Convert.ToUInt64(coincidencia.Groups[1].Value, 16) : null;
     }
 
     /// <summary>Nombres que Ryujinx ya guardó (en el idioma del sistema) en portable\games\&lt;id&gt;\gui\metadata.json.</summary>

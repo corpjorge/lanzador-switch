@@ -15,6 +15,7 @@
     <!-- Windows y la ventana WPF usan el mismo icono. -->
     <Resource Include="Icono\Lanzador.ico" />
     <None Include="Fuentes\OFL-*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="Audio\Voces\*.pcm" LogicalName="Lanzador.App.Audio.Voces.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -26,7 +27,7 @@
     <AssemblyName>Lanzador</AssemblyName>
     <RootNamespace>Lanzador.App</RootNamespace>
     <Product>Lanzador Switch</Product>
-    <Version>1.2.3</Version>
+    <Version>1.3.0</Version>
     <!-- La versión de producto queda sin "+<commit>": SignPath la compara al firmar. -->
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Copyright>Copyright (c) 2026 corpjorge · MIT</Copyright>

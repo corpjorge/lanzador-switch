@@ -16,6 +16,7 @@ public partial class MainWindow
 
     private bool _buscandoActualizaciones;
     private bool _actualizandoLanzador;
+    private readonly SemaphoreSlim _sincronizacionContenido = new(1);
 
     /// <summary>
     /// Busca versiones nuevas del lanzador y de los emuladores instalados y, si hay, pregunta qué actualizar.
@@ -146,9 +147,9 @@ public partial class MainWindow
     }
 
     /// <summary>Pone en cada emulador instalado las carpetas de actualizaciones y DLC de la configuración que le falten.</summary>
-    public async Task<string> SincronizarContenidoAsync()
+    public async Task<string> SincronizarContenidoAsync(bool avisarErrores = true)
     {
-        var carpetas = Estado.Config.CarpetasContenido.ToList();
+        var carpetas = ContenidoExterno.CarpetasDeBiblioteca(Estado.Config);
         if (carpetas.Count == 0)
             return "";
         var cargan = new List<string>();
@@ -156,7 +157,7 @@ public partial class MainWindow
         var errores = new List<string>();
         foreach (var emulador in Estado.Config.Emuladores.Where(e => e.Instalado).ToList())
         {
-            var (admite, resultado) = await Task.Run(() => (ContenidoExterno.Admite(emulador), ContenidoExterno.Agregar(emulador, carpetas)));
+            var (admite, resultado) = await PrepararContenidoAsync(emulador, carpetas);
             if (!resultado.Exito)
                 errores.Add(resultado.Mensaje);
             else if (admite)
@@ -170,9 +171,30 @@ public partial class MainWindow
         if (manual.Count > 0)
             partes.Add($"En {Lista(manual)} hay que instalarlos desde el propio emulador.");
         partes.AddRange(errores);
-        if (errores.Count > 0)
+        if (avisarErrores && errores.Count > 0)
             Aviso(string.Join(" ", errores), true);
         return string.Join(" ", partes);
+    }
+
+    private Task<(bool Admite, ResultadoContenido Resultado)> PrepararContenidoAsync(EmuladorConfig emulador) =>
+        PrepararContenidoAsync(emulador, ContenidoExterno.CarpetasDeBiblioteca(Estado.Config));
+
+    private async Task<(bool Admite, ResultadoContenido Resultado)> PrepararContenidoAsync(
+        EmuladorConfig emulador, IReadOnlyList<string> carpetas)
+    {
+        await _sincronizacionContenido.WaitAsync();
+        try
+        {
+            return await Task.Run(() =>
+            {
+                var admite = ContenidoExterno.Admite(emulador);
+                return (admite, admite ? ContenidoExterno.Agregar(emulador, carpetas) : new ResultadoContenido(true, ""));
+            });
+        }
+        finally
+        {
+            _sincronizacionContenido.Release();
+        }
     }
 
     /// <summary>"Eden", "Eden y Ryujinx", "Eden, Citron Neo y Ryujinx".</summary>

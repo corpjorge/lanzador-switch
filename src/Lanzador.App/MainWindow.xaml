@@ -109,48 +109,100 @@
             <!-- Menús emergentes (la barra de botones queda visible debajo) -->
             <Grid x:Name="Superpuestos" Margin="0,0,0,76"/>
 
-            <!-- Intro al abrir: «Switch» con resplandor, destello y línea de acento; se salta con cualquier botón -->
-            <Grid x:Name="Intro" Panel.ZIndex="30" Visibility="Collapsed" Background="{StaticResource bg-000}" MouseDown="AlPulsarIntro">
-                <Ellipse x:Name="HaloIntro" Width="1100" Height="520" Opacity="0" IsHitTestVisible="False">
+            <!-- Intro al abrir, con salida inmediata desde teclado, mando o ratón. -->
+            <Grid x:Name="Intro" Panel.ZIndex="30" Visibility="Collapsed" Background="#080E17"
+                  ClipToBounds="True" Focusable="False" MouseDown="AlPulsarIntro">
+                <Ellipse x:Name="HaloIntro" Width="1420" Height="820" Opacity="0" IsHitTestVisible="False">
                     <Ellipse.Fill>
                         <RadialGradientBrush>
-                            <GradientStop Color="#383DB2FF" Offset="0"/>
-                            <GradientStop Color="#123DB2FF" Offset="0.55"/>
-                            <GradientStop Color="#003DB2FF" Offset="1"/>
+                            <GradientStop Color="#AD174C80" Offset="0"/>
+                            <GradientStop Color="#55143B62" Offset="0.45"/>
+                            <GradientStop Color="#00080E17" Offset="1"/>
                         </RadialGradientBrush>
                     </Ellipse.Fill>
                 </Ellipse>
-                <StackPanel x:Name="LogoIntro" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0" RenderTransformOrigin="0.5,0.5"
-                            IsHitTestVisible="False">
+                <Grid x:Name="AnillosIntro" Width="900" Height="600" Opacity="0" IsHitTestVisible="False"
+                      RenderTransformOrigin="0.5,0.5">
+                    <Grid.RenderTransform>
+                        <ScaleTransform x:Name="EscalaAnillosIntro"/>
+                    </Grid.RenderTransform>
+                    <Ellipse Width="640" Height="640" Stroke="#484FBFFF" StrokeThickness="1" Margin="0,-20"/>
+                    <Ellipse Width="540" Height="540" Stroke="#4A52C6FF" StrokeThickness="1" StrokeDashArray="3,12"/>
+                    <Ellipse Width="438" Height="438" Stroke="#2D59D7F7" StrokeThickness="1" StrokeDashArray="1,8"/>
+                </Grid>
+                <Grid IsHitTestVisible="False" HorizontalAlignment="Center" VerticalAlignment="Center" Width="1080" Height="180">
+                    <Border x:Name="RielSuperiorIntro" Height="2" Margin="0,0,0,58" VerticalAlignment="Center" Opacity="0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#000C70C5" Offset="0"/>
+                                <GradientStop Color="#A145CDFF" Offset="0.63"/>
+                                <GradientStop Color="#FFE1F8FF" Offset="0.94"/>
+                                <GradientStop Color="#005AD6FF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.RenderTransform>
+                            <TranslateTransform x:Name="DesplazarRielSuperiorIntro"/>
+                        </Border.RenderTransform>
+                    </Border>
+                    <Border x:Name="RielInferiorIntro" Height="2" Margin="0,58,0,0" VerticalAlignment="Center" Opacity="0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="1,0" EndPoint="0,0">
+                                <GradientStop Color="#001353A5" Offset="0"/>
+                                <GradientStop Color="#A19C8AFF" Offset="0.63"/>
+                                <GradientStop Color="#FFE1EEFF" Offset="0.94"/>
+                                <GradientStop Color="#0060B6FF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.RenderTransform>
+                            <TranslateTransform x:Name="DesplazarRielInferiorIntro"/>
+                        </Border.RenderTransform>
+                    </Border>
+                </Grid>
+                <Ellipse x:Name="PulsoIntro" Width="466" Height="466" Stroke="#965CD0FF" StrokeThickness="2" Opacity="0"
+                         IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
+                    <Ellipse.RenderTransform>
+                        <ScaleTransform x:Name="EscalaPulsoIntro"/>
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+                <StackPanel x:Name="LogoIntro" HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0"
+                            IsHitTestVisible="False" RenderTransformOrigin="0.5,0.5">
                     <StackPanel.RenderTransform>
-                        <ScaleTransform x:Name="EscalaIntro" ScaleX="0.92" ScaleY="0.92"/>
+                        <TransformGroup>
+                            <ScaleTransform x:Name="EscalaIntro"/>
+                            <TranslateTransform x:Name="DesplazarLogoIntro"/>
+                        </TransformGroup>
                     </StackPanel.RenderTransform>
                     <Grid>
-                        <!-- Resplandor: la misma palabra en color de foco, difuminada detrás -->
-                        <TextBlock x:Name="ResplandorIntro" Text="Switch" FontFamily="{StaticResource font-display}" FontWeight="Bold" FontSize="148"
-                                   Foreground="{StaticResource focus}" Opacity="0" HorizontalAlignment="Center">
+                        <TextBlock x:Name="ResplandorIntro" Text="Switch" FontFamily="{StaticResource font-display}" FontWeight="Bold" FontSize="152"
+                                   Foreground="#AA4CC8FF" Opacity="0" HorizontalAlignment="Center">
                             <TextBlock.Effect>
-                                <BlurEffect Radius="48" KernelType="Gaussian"/>
+                                <BlurEffect Radius="34" KernelType="Gaussian" RenderingBias="Performance"/>
                             </TextBlock.Effect>
                         </TextBlock>
-                        <TextBlock Text="Switch" FontFamily="{StaticResource font-display}" FontWeight="Bold" FontSize="148" HorizontalAlignment="Center">
+                        <TextBlock Text="Switch" FontFamily="{StaticResource font-display}" FontWeight="Bold" FontSize="152" HorizontalAlignment="Center">
                             <TextBlock.Foreground>
-                                <!-- Una franja de luz que cruza las letras -->
                                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0.25">
                                     <LinearGradientBrush.RelativeTransform>
-                                        <TranslateTransform x:Name="DestelloIntro" X="-1.2"/>
+                                        <TranslateTransform x:Name="DestelloIntro"/>
                                     </LinearGradientBrush.RelativeTransform>
-                                    <GradientStop Color="#F2F6FA" Offset="0"/>
-                                    <GradientStop Color="#F2F6FA" Offset="0.38"/>
-                                    <GradientStop Color="#5CD0FF" Offset="0.5"/>
-                                    <GradientStop Color="#F2F6FA" Offset="0.62"/>
-                                    <GradientStop Color="#F2F6FA" Offset="1"/>
+                                    <GradientStop Color="#E4F2FE" Offset="0"/>
+                                    <GradientStop Color="#E4F2FE" Offset="0.38"/>
+                                    <GradientStop Color="#69DAFF" Offset="0.5"/>
+                                    <GradientStop Color="#E4F2FE" Offset="0.62"/>
+                                    <GradientStop Color="#E4F2FE" Offset="1"/>
                                 </LinearGradientBrush>
                             </TextBlock.Foreground>
                         </TextBlock>
                     </Grid>
-                    <Border x:Name="LineaIntro" Height="5" Width="0" CornerRadius="3" Background="{StaticResource accent-500}" HorizontalAlignment="Center"
-                            Margin="0,6,0,0"/>
+                    <Border x:Name="LineaIntro" Height="3" Width="0" CornerRadius="2" HorizontalAlignment="Center" Margin="0,14,0,0">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#001475BA" Offset="0"/>
+                                <GradientStop Color="#FF72DFFF" Offset="0.5"/>
+                                <GradientStop Color="#001475BA" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
                 </StackPanel>
             </Grid>
 

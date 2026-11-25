@@ -14,6 +14,7 @@ public static class Lanzamiento
         var argumentos = emulador.Argumentos.Contains("{juego}")
             ? emulador.Argumentos.Replace("{juego}", juego.RutaArchivo)
             : $"{emulador.Argumentos} \"{juego.RutaArchivo}\"".Trim();
+        argumentos = IdiomaJuegos.Preparar(emulador, juego, argumentos);
 
         var psi = new ProcessStartInfo(emulador.RutaExe, argumentos)
         {

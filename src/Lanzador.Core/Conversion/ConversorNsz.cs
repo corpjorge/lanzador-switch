@@ -73,6 +73,25 @@ public static class ConversorNsz
         return lista.OrderBy(a => a.Nombre, StringComparer.CurrentCultureIgnoreCase).ToList();
     }
 
+    internal static IReadOnlyList<ulong> LeerTitleIds(string ruta, CabeceraNca cabecera)
+    {
+        try
+        {
+            if ((File.GetAttributes(ruta) & FileAttributes.Offline) != 0)
+                return [];
+            using var archivo = Abrir(ruta);
+            return LeerPfs0(archivo)
+                .Where(e => e.Tamano >= 0x220 && (e.Nombre.EndsWith(".cnmt.nca", StringComparison.OrdinalIgnoreCase) ||
+                                                  e.Nombre.EndsWith(".cnmt.ncz", StringComparison.OrdinalIgnoreCase)))
+                .Select(e => cabecera.LeerTitleId(archivo, e.Posicion))
+                .OfType<ulong>().Distinct().ToList();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException)
+        {
+            return [];
+        }
+    }
+
     /// <summary>Lee las cabeceras de un archivo comprimido para saber si se puede convertir y cuánto ocupará.</summary>
     public static ArchivoComprimido Examinar(string ruta)
     {

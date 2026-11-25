@@ -65,10 +65,11 @@ internal static class SalidaWave
     private static readonly int TamanoCabecera = Marshal.SizeOf<CabeceraWave>();
     private static readonly int PosicionFlags = (int)Marshal.OffsetOf<CabeceraWave>(nameof(CabeceraWave.dwFlags));
 
-    private sealed class Voz(float[] muestras, double volumen)
+    private sealed class Voz(float[] muestras, double volumen, CancellationToken cancelacion)
     {
         public float[] Muestras { get; } = muestras;
         public double Volumen { get; } = volumen;
+        public CancellationToken Cancelacion { get; } = cancelacion;
         public int Posicion { get; set; }
     }
 
@@ -106,11 +107,11 @@ internal static class SalidaWave
     }
 
     /// <summary>Agrega un sonido a la mezcla. Si la salida estaba cerrada la abre, y se vuelve a cerrar al terminar.</summary>
-    public static void Tocar(float[] muestras, double volumen)
+    public static void Tocar(float[] muestras, double volumen, CancellationToken cancelacion)
     {
         lock (Cerrojo)
         {
-            Nuevas.Enqueue(new Voz(muestras, volumen));
+            Nuevas.Enqueue(new Voz(muestras, volumen, cancelacion));
             AbrirSiHaceFalta();
         }
     }
@@ -229,14 +230,19 @@ internal static class SalidaWave
         void Llenar(int i)
         {
             while (Nuevas.TryDequeue(out var nueva))
-                voces.Add(nueva);
+                if (!nueva.Cancelacion.IsCancellationRequested)
+                    voces.Add(nueva);
             Array.Clear(mezcla);
             foreach (var voz in voces)
             {
                 var n = Math.Min(MuestrasPorBloque, voz.Muestras.Length - voz.Posicion);
+                var cancelar = voz.Cancelacion.IsCancellationRequested;
                 for (var k = 0; k < n; k++)
-                    mezcla[k] += (float)(voz.Muestras[voz.Posicion + k] * voz.Volumen);
-                voz.Posicion += n;
+                {
+                    var fundido = cancelar ? 1.0 - (k + 1.0) / n : 1.0;
+                    mezcla[k] += (float)(voz.Muestras[voz.Posicion + k] * voz.Volumen * fundido);
+                }
+                voz.Posicion = cancelar ? voz.Muestras.Length : voz.Posicion + n;
             }
             voces.RemoveAll(v => v.Posicion >= v.Muestras.Length);
             for (var k = 0; k < MuestrasPorBloque; k++)
